@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 import configparser
 
+# read properties on project root
 config = configparser.RawConfigParser()
 config.read(r'nautilus.properties')
 
@@ -55,7 +56,7 @@ def generate_pm():
 
             data = [trace0, trace1, trace2]
             layout = go.Layout(
-                title='Evolució del número de visites per mes (Dades de Tesis)',
+                title='Evolució del número de visites per mes',
                 titlefont=dict(family='Arial, sans-serif',
                                size=24,
                                color='green'),
@@ -108,7 +109,7 @@ def generate_pcpe():
 
           data = [trace0]
           layout = go.Layout(
-              title='Total visites per especialitat (Dades de Tesis)',
+              title='Total visites per especialitat',
               titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
               xaxis=dict(showticklabels=True,
                          tickangle=45,
@@ -195,7 +196,7 @@ def generate_pepm(p_idEspeciality):
 
             data = [trace0, trace1]
             layout = go.Layout(
-                title='Evolució visites de Medicina General (Dades de Tesis)',
+                title='Evolució visites de Medicina General',
                 titlefont=dict(family='Arial, sans-serif',
                                size=24,
                                color='green'),
