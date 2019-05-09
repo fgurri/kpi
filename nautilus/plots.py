@@ -4,6 +4,7 @@ from mysql.connector import Error
 import plotly as py
 import plotly.graph_objs as go
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 import numpy as np
 import configparser
 
@@ -109,7 +110,7 @@ def generate_pcpe():
 
           data = [trace0]
           layout = go.Layout(
-              title='Total visites per especialitat',
+              title='Total visites per especialitat 2019',
               titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
               xaxis=dict(showticklabels=True,
                          tickangle=45,
@@ -211,6 +212,75 @@ def generate_pepm(p_idEspeciality):
                                           size=18,
                                           color='lightgrey'),
                            showticklabels=True,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def generate_prpa(p_idAgenda):
+    try:
+        print(config.get('DatabaseSection', 'database.host'))
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            cursor = connection.cursor()
+            print('SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\'')
+            cursor.execute(
+                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\''
+            )
+
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'MesNom', 1: 'rep'})
+            df = df.sort_values(['MesNom'], ascending=[1])
+
+            linear_x = np.r_[0:len(rows)]
+            linear_x = np.arange(0, len(rows)).reshape(-1, 1)
+            linear_regressor = LinearRegression(
+            )  # create object for the class
+            linear_regressor.fit(linear_x,
+                                 df['rep'])  # perform linear regression
+            linear_y = linear_regressor.predict(linear_x)  # make predictions
+            trace1 = go.Scatter(x=df['MesNom'],
+                                y=linear_y,
+                                mode='lines',
+                                name='tendencia repetitivitat')
+            trace0 = go.Scatter(x=df['MesNom'],
+                                y=df['rep'],
+                                mode='lines+markers',
+                                name='repetitivitat')
+
+            poly_reg = PolynomialFeatures(degree=4)
+            X_poly = poly_reg.fit_transform(linear_x)
+            pol_reg = LinearRegression()
+            pol_reg.fit(X_poly, df['rep'])
+            trace2 = go.Scatter(x=df['MesNom'],
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='regressio repetitivitat')
+
+
+            data = [trace0, trace2]
+            layout = go.Layout(
+                xaxis=dict(showticklabels=True,
+                           tickangle=45,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'),
+                yaxis=dict(showticklabels=True,
                            tickfont=dict(family='Old Standard TT, serif',
                                          size=14,
                                          color='black'),

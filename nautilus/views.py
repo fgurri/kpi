@@ -13,7 +13,9 @@ def dashboard(request):
         'v_new_patients_last_year': 2360,
         'v_fidelity_total': 15.67,
         'v_fidelity_current_year': 3.93,
-        'v_fidelity_last_year': 3.85,})
+        'v_fidelity_last_year': 3.85,
+        'plot_rep_med_gen': p.generate_prpa('AG100'),
+        'plot_rep_endos': p.generate_prpa('AG45')})
 
 
 def plotpm(request):

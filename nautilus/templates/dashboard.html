@@ -4,7 +4,7 @@
         <div class="col-md-4">
             <div class="panel panel-info">
               <div class="panel-heading">
-                Assistencia
+                KPI_01: Assistencia
               </div>
               <div class="panel-body">
                 <table width='100%' class='table table-responsive'>
@@ -14,11 +14,11 @@
                         <td>{{v_visits_total}}</td>
                     </tr>
                     <tr>
-                        <td>Visites any en curs:</td>
+                        <td>Visites 2019:</td>
                         <td>{{v_visits_current_year}}</td>
                     </tr>
                     <tr>
-                        <td>Visites any anterior:</td>
+                        <td>Visites 2018:</td>
                         <td>{{v_visits_last_year}}</td>
                     </tr>
                 </tbody>
@@ -33,7 +33,7 @@
         <div class="col-md-4">
             <div class="panel panel-info">
               <div class="panel-heading">
-                Pacients
+                KPI_02: Pacients
               </div>
               <div class="panel-body">
                 <table width='100%' class='table table-responsive'>
@@ -70,7 +70,7 @@
         <div class="col-md-4">
             <div class="panel panel-info">
               <div class="panel-heading">
-                Fidelització
+                KPI_03: Fidelització
               </div>
               <div class="panel-body">
                 <table width='100%' class='table table-responsive'>
@@ -94,6 +94,28 @@
               <div class="panel-footer">
                 Dades fins Març 2019
               </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    KPI_04: Repetitivitat Medicina General
+                </div>
+                <div class="panel-body">
+                    {{plot_rep_med_gen|safe}}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    KPI_05: Repetitivitat Fisioterapia
+                </div>
+                <div class="panel-body">
+                    {{plot_rep_endos|safe}}
+                </div>
             </div>
         </div>
     </div>
