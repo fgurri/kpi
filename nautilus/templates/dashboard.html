@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Assistencia
+              </div>
+              <div class="panel-body">
+                <table width='100%' class='table table-responsive'>
+                    <tbody>
+                    <tr>
+                        <td>Total visites:</td>
+                        <td>{{v_visits_total}}</td>
+                    </tr>
+                    <tr>
+                        <td>Visites any en curs:</td>
+                        <td>{{v_visits_current_year}}</td>
+                    </tr>
+                    <tr>
+                        <td>Visites any anterior:</td>
+                        <td>{{v_visits_last_year}}</td>
+                    </tr>
+                </tbody>
+                </table>
+
+              </div>
+              <div class="panel-footer">
+                Dades fins Març 2019
+              </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Pacients
+              </div>
+              <div class="panel-body">
+                <table width='100%' class='table table-responsive'>
+                    <tbody>
+                    <tr>
+                        <td>Total pacients:</td>
+                        <td>{{v_patients_total}}</td>
+                    </tr>
+                    <tr>
+                        <td>Pacients 2019:</td>
+                        <td>{{v_patients_current_year}}</td>
+                    </tr>
+                    <tr>
+                        <td>Pacients 2018:</td>
+                        <td>{{v_patients_last_year}}</td>
+                    </tr>
+                    <tr>
+                        <td>Pacients nous 2019:</td>
+                        <td>{{v_new_patients_current_year}}</td>
+                    </tr>
+                    <tr>
+                        <td>Pacients nous 2018:</td>
+                        <td>{{v_new_patients_last_year}}</td>
+                    </tr>
+                </tbody>
+                </table>
+
+              </div>
+              <div class="panel-footer">
+                Dades fins Març 2019
+              </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Fidelització
+              </div>
+              <div class="panel-body">
+                <table width='100%' class='table table-responsive'>
+                    <tbody>
+                    <tr>
+                        <td>Total repetitivitat:</td>
+                        <td>{{v_fidelity_total}}</td>
+                    </tr>
+                    <tr>
+                        <td>Repetitivitat 2019:</td>
+                        <td>{{v_fidelity_current_year}}</td>
+                    </tr>
+                    <tr>
+                        <td>Repetitivitat 2018:</td>
+                        <td>{{v_fidelity_last_year}}</td>
+                    </tr>
+                </tbody>
+                </table>
+
+              </div>
+              <div class="panel-footer">
+                Dades fins Març 2019
+              </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
