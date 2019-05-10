@@ -37,8 +37,8 @@ def generate_pm():
             index_start_odonto_omi = list(df['MesNom']).index("2017-Dec")
             value_start_odonto_omi = df['Total'].get(index_start_odonto_omi)
 
-            linear_x = np.r_[0:len(rows)]
-            linear_x = np.arange(0, len(rows)).reshape(-1, 1)
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
             linear_regressor = LinearRegression(
             )  # create object for the class
             linear_regressor.fit(linear_x,
@@ -150,24 +150,25 @@ def generate_pepm(p_idEspeciality):
             db_Info = connection.get_server_info()
             cursor = connection.cursor()
             cursor.execute(
-                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda WHERE f_idEspecialitat='+str(p_idEspeciality)+' GROUP BY CONCAT(f_year, "-", f_monthname)'
+                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda WHERE f_idEspecialitat='+str(p_idEspeciality)+' GROUP BY CONCAT(f_year, "-", f_monthname), f_month'
             )
 
             rows = cursor.fetchall()
             df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'MesNom', 1: 'Total'})
-            df = df.sort_values(['MesNom'], ascending=[1])
+            df = df.rename(columns={0: 'MesNom', 1: 'f_month', 2: 'Total'})
+            df = df.sort_values(['f_month'], ascending=[1])
 
             cursor.execute(
-                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda GROUP BY CONCAT(f_year, "-", f_monthname)'
+                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda GROUP BY CONCAT(f_year, "-", f_monthname), f_month'
             )
             rows_all = cursor.fetchall()
             df_all = pd.DataFrame([[ij for ij in i] for i in rows_all])
-            df_all = df_all.rename(columns={0: 'MesNom', 1: 'Total'})
-            df_all = df_all.sort_values(['MesNom'], ascending=[1])
+            df_all = df_all.rename(columns={0: 'MesNom', 1: 'f_month', 2: 'Total'})
+            df_all = df_all.sort_values(['f_month'], ascending=[1])
 
-            linear_x = np.r_[0:len(rows)]
-            linear_x = np.arange(0, len(rows)).reshape(-1, 1)
+
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
             linear_regressor = LinearRegression(
             )  # create object for the class
             linear_regressor.fit(linear_x,
@@ -177,8 +178,8 @@ def generate_pepm(p_idEspeciality):
                                 y=linear_y,
                                 mode='lines',
                                 name='Tendencia Especialitat')
-            linear_x_all = np.r_[0:len(rows_all)]
-            linear_x_all = np.arange(0, len(rows_all)).reshape(-1, 1)
+            linear_x_all = np.r_[0:len(df_all)]
+            linear_x_all = np.arange(0, len(df_all)).reshape(-1, 1)
             linear_regressor_all = LinearRegression(
             )  # create object for the class
             linear_regressor_all.fit(
@@ -238,18 +239,18 @@ def generate_prpa(p_idAgenda):
         if connection.is_connected():
             db_Info = connection.get_server_info()
             cursor = connection.cursor()
-            print('SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\'')
+            print('SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\'')
             cursor.execute(
-                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\''
+                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\''
             )
 
             rows = cursor.fetchall()
             df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'MesNom', 1: 'rep'})
-            df = df.sort_values(['MesNom'], ascending=[1])
+            df = df.rename(columns={0: 'MesNom', 1: 'f_month', 2: 'rep'})
+            df = df.sort_values(['f_month'], ascending=[1])
 
-            linear_x = np.r_[0:len(rows)]
-            linear_x = np.arange(0, len(rows)).reshape(-1, 1)
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
             linear_regressor = LinearRegression(
             )  # create object for the class
             linear_regressor.fit(linear_x,
