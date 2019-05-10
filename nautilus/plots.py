@@ -39,15 +39,12 @@ def generate_pm():
 
             linear_x = np.r_[0:len(df)]
             linear_x = np.arange(0, len(df)).reshape(-1, 1)
-            linear_regressor = LinearRegression(
-            )  # create object for the class
-            linear_regressor.fit(linear_x,
-                                 df['Total'])  # perform linear regression
-            linear_y = linear_regressor.predict(linear_x)  # make predictions
+            poly_reg = PolynomialFeatures(degree=4)
+            X_poly = poly_reg.fit_transform(linear_x)
+            pol_reg = LinearRegression()
+            pol_reg.fit(X_poly, df['Total'])
             trace1 = go.Scatter(x=df['MesNom'],
-                                y=linear_y,
-                                mode='lines',
-                                name='Tendencia')
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia')
 
             trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
                                 y=[0, df['Total'].max()],
@@ -166,18 +163,17 @@ def generate_pepm(p_idEspeciality):
             df_all = df_all.rename(columns={0: 'MesNom', 1: 'f_month', 2: 'Total'})
             df_all = df_all.sort_values(['f_month'], ascending=[1])
 
-
             linear_x = np.r_[0:len(df)]
             linear_x = np.arange(0, len(df)).reshape(-1, 1)
-            linear_regressor = LinearRegression(
-            )  # create object for the class
-            linear_regressor.fit(linear_x,
-                                 df['Total'])  # perform linear regression
-            linear_y = linear_regressor.predict(linear_x)  # make predictions
+            poly_reg = PolynomialFeatures(degree=4)
+            X_poly = poly_reg.fit_transform(linear_x)
+            pol_reg = LinearRegression()
+            pol_reg.fit(X_poly, df['Total'])
             trace1 = go.Scatter(x=df['MesNom'],
-                                y=linear_y,
-                                mode='lines',
-                                name='Tendencia Especialitat')
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia Especialitat')
+
+
+
             linear_x_all = np.r_[0:len(df_all)]
             linear_x_all = np.arange(0, len(df_all)).reshape(-1, 1)
             linear_regressor_all = LinearRegression(
@@ -274,6 +270,78 @@ def generate_prpa(p_idAgenda):
 
 
             data = [trace0, trace2]
+            layout = go.Layout(
+                xaxis=dict(showticklabels=True,
+                           tickangle=45,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'),
+                yaxis=dict(showticklabels=True,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def generate_pnppm():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            cursor = connection.cursor()
+            cursor.execute(
+                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_patients_per_month'
+            )
+
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Patients', 3: 'NewPatients'})
+            df = df.sort_values(['Mes'], ascending=[1])
+            trace0_total = go.Scatter(x=df['MesNom'],
+                                y=df['Patients'],
+                                mode='lines+markers',
+                                name='Total pacients')
+            trace0_new = go.Scatter(x=df['MesNom'],
+                                y=df['NewPatients'],
+                                mode='lines+markers',
+                                name='Pacients nous')
+            index_start_odonto_omi = list(df['MesNom']).index("2017-Dec")
+            value_start_odonto_omi = df['Patients'].get(index_start_odonto_omi)
+
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
+            poly_reg = PolynomialFeatures(degree=4)
+            X_poly = poly_reg.fit_transform(linear_x)
+            pol_reg = LinearRegression()
+            pol_reg.fit(X_poly, df['NewPatients'])
+            trace1_new = go.Scatter(x=df['MesNom'],
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia nous pacients')
+
+            pol_reg.fit(X_poly, df['Patients'])
+            trace1_total = go.Scatter(x=df['MesNom'],
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia total pacients')
+
+            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
+                                y=[0, df['Patients'].max()],
+                                mode='lines',
+                                name='Inici odontologia a OMI360',
+                                line=dict(dash='dot'))
+
+            data = [trace0_total, trace0_new, trace1_new, trace1_total, trace2]
             layout = go.Layout(
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
