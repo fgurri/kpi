@@ -3,7 +3,8 @@ from . import views
 
 urlpatterns = [
     path('dashboard', views.dashboard, name='dashboard'),
-    path('pm', views.plotpm, name='pm'),
-    path('pepm', views.plotpepm, name='pepm'),
-    path('pcpe', views.plotpcpe, name='pcpe')
+    path('pm', views.plot_visits_per_month, name='pm'),
+    path('pepm', views.plot_visits_per_month_speciality, name='pepm'),
+    path('papm', views.plot_visits_per_month_agenda, name='papm'),
+    path('pcpe', views.plot_visits_per_speciality, name='pcpe')
 ]

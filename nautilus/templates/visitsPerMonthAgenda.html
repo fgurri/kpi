@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+    <form action="papm" method="POST" id="form_speciality">{% csrf_token %}
+        <label for="id_agenda">Agenda:</label>
+        <select name="id_agenda">
+            <option value=""></option>
+            {% for age in listAgendas %}
+                {% ifequal age.id id_agenda %}
+                    <option value="{{age.id}}" selected="selected"/>{{age.name}}</option>
+                {% else %}
+                    <option value="{{age.id}}" />{{age.name}}</option>
+                {% endifequal %}
+            {% endfor %}
+        </select>
+        <input type="submit" value="generar grafica"/>
+    </form>
+    {{ plotdiv|safe }}
+{% endblock %}

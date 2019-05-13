@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+    <form action="pepm" method="POST" id="form_speciality">{% csrf_token %}
+        <label for="id_speciality">Especialitat:</label>
+        <select name="id_speciality">
+            <option value=""></option>
+            {% for spec in listSpecialities %}
+                {% ifequal spec.id id_speciality %}
+                    <option value="{{spec.id}}" selected="selected"/>{{spec.name}}</option>
+                {% else %}
+                    <option value="{{spec.id}}" />{{spec.name}}</option>
+                {% endifequal %}
+            {% endfor %}
+        </select>
+        <input type="submit" value="generar grafica"/>
+    </form>
+    {{ plotdiv|safe }}
+{% endblock %}
