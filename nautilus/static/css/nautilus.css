@@ -4,3 +4,6 @@
 #menu {
     font-size: 17px;
 }
+.slider.slider-horizontal{
+  width:100%; /* sample value - set it as you like*/
+}

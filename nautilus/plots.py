@@ -382,7 +382,7 @@ def plot_new_patients_per_month():
             connection.close()
 
 
-def plot_distribution_new_patients ():
+def plot_distribution_new_patients():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
@@ -456,3 +456,173 @@ def plot_distribution_new_patients ():
         if (connection.is_connected()):
             cursor.close()
             connection.close()
+
+
+def plot_new_patients_per_speciality_per_month():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(
+                'SELECT f_nomEspecialitat, CONCAT(LEFT(f_month,4), "-", f_monthname) as mesnom, f_month, sum(f_newPatients) as total FROM dm2_newpatient_per_month_agenda GROUP BY f_nomEspecialitat, CONCAT(LEFT(f_month,4), "-", f_monthname), f_month'
+            )
+
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'Spec', 1: 'MesNom', 2: 'Mes', 3: 'NewPatients'})
+            arraySpecs = df['Spec'].unique()
+            df = df.set_index('Spec')
+            data = list()
+            for spec in arraySpecs:
+                df_spec = pd.DataFrame(df.loc[df.index == spec, ['MesNom', 'Mes', 'NewPatients']])
+                df_spec = df_spec.sort_values(['Mes'], ascending=[1])
+                trace = go.Scatter(x=df_spec['MesNom'],
+                    y=df_spec['NewPatients'],
+                    mode='lines',
+                    name=spec,
+                    stackgroup='one',
+                    groupnorm='percent')
+                data.append(trace)
+
+            print(data)
+
+            layout = go.Layout(
+                showlegend=True,
+                xaxis=dict(
+                    showticklabels=True,
+                    tickangle=45,
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    type='category',
+                ),
+                yaxis=dict(
+                    type='linear',
+                    range=[1, 100],
+                    dtick=20,
+                    ticksuffix='%'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def plot_evolution_new_patients_per_spec(p_idEspeciality=None, p_idAgenda=None):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            sql = 'SELECT f_month, CONCAT(LEFT(f_month,4), "-", f_monthname) as mesnom, sum(f_newPatients) as total from dm2_newpatient_per_month_agenda WHERE '
+            if p_idEspeciality is None and p_idAgenda is None:
+                p_idEspeciality=19 # medicina general per defecte
+            if (not p_idEspeciality is None) and p_idEspeciality != "":
+                sql = sql + 'f_idEspecialitat='+str(p_idEspeciality)+' '
+            else:
+                if (not p_idAgenda is None) and p_idAgenda != "":
+                    sql = sql + 'f_idAgenda=\''+str(p_idAgenda)+'\' '
+            sql = sql + 'GROUP BY f_month, CONCAT(LEFT(f_month,4), "-", f_monthname)'
+            print(sql)
+            cursor.execute(sql)
+
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'NewPatients'})
+            df = df.sort_values(['Mes'], ascending=[1])
+            trace0_new = go.Scatter(x=df['MesNom'],
+                                y=df['NewPatients'],
+                                mode='lines+markers',
+                                name='Pacients nous')
+
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
+            poly_reg = PolynomialFeatures(degree=4)
+            X_poly = poly_reg.fit_transform(linear_x)
+            pol_reg = LinearRegression()
+            pol_reg.fit(X_poly, df['NewPatients'])
+            trace1_new = go.Scatter(x=df['MesNom'],
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia nous pacients')
+
+            data = [trace0_new, trace1_new]
+            layout = go.Layout(
+                showlegend=True,
+                xaxis=dict(
+                    showticklabels=True,
+                    tickangle=45,
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    type='category',
+                ),
+                yaxis=dict(showticklabels=True,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def plot_distribution_new_patients_per_spec(p_firstmonth, p_lastmonth):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(
+                'SELECT f_nomEspecialitat, sum(f_newPatients) as total FROM datawarehouse.dm2_newpatient_per_month_agenda WHERE f_month >= '+str(p_firstmonth)+' and f_month <= '+str(p_lastmonth)+' GROUP BY f_nomEspecialitat'
+            )
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'Especialitat', 1: 'NewPatients'})
+            df = df.sort_values(['NewPatients'], ascending=[0])
+            trace0_new = go.Pie(labels=df['Especialitat'], values=df['NewPatients'])
+
+            data = [trace0_new]
+            layout = go.Layout(
+                showlegend=True,
+                xaxis=dict(
+                    showticklabels=True,
+                    tickangle=45,
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    type='category',
+                ),
+                yaxis=dict(showticklabels=True,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+

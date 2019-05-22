@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block scripts %}
+
+    <script>
+    $(document).ready(function() {
+        $("#ex25").slider({{ sliderdict|safe }});
+
+        $("#btnsubmit").click(function () {
+            $("#rangevalues").val ("'" + $("#ex25").slider("getValue") + "'");
+        });
+    });
+
+    </script>
+{% endblock %}
+{% block content %}
+    <form action="nppe" method="POST" id="form_range">{% csrf_token %}
+        <input id="ex25" class="slider slider-horizontal" type="text" data-slider-value="" data-slider-ticks="" data-slider-lock-to-ticks="true"/>
+        <input type="hidden" value="" name="rangevalues" id="rangevalues">
+        <input type="submit" id="btnsubmit" value="generar grafica"/>
+    </form>
+    {{ plotdiv|safe }}
+{% endblock %}

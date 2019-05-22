@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block scripts %}
+
+    <script>
+    $(document).ready(function() {
+        $("#ex25").slider({{ sliderdict|safe }});
+
+        $("#btnsubmit").click(function () {
+            $("#rangevalues").val ("'" + $("#ex25").slider("getValue") + "'");
+        });
+    });
+
+    function showYear (year) {
+        document.getElementById("monthini").value = year+"01";
+        document.getElementById("monthfinal").value = year+"12";
+    }
+
+    </script>
+{% endblock %}
+{% block content %}
+    <form action="nppe" method="POST" id="form_range">{% csrf_token %}
+        <label for="monthini">Mes inicial:</label>
+        <select id="monthini" name="monthini">
+            <option value=""></option>
+            {% for month in listMonths %}
+                {% ifequal month.id monthini %}
+                    <option value="{{month.id}}" selected="selected"/>{{month.name}}</option>
+                {% else %}
+                    <option value="{{month.id}}"/>{{month.name}}</option>
+                {% endifequal %}
+            {% endfor %}
+        </select>
+        <label for="monthfinal">Mes final:</label>
+        <select id="monthfinal" name="monthfinal">
+            <option value=""></option>
+            {% for month in listMonths %}
+                {% ifequal month.id monthfinal %}
+                    <option value="{{month.id}}" selected="selected"/>{{month.name}}</option>
+                {% else %}
+                    <option value="{{month.id}}"/>{{month.name}}</option>
+                {% endifequal %}
+            {% endfor %}
+        </select>
+        <input type="submit" id="btnsubmit" value="generar grafica"/>
+        <br>
+        <button onclick="javascript:showYear('2014')">2014</button>
+        <button onclick="javascript:showYear('2015')">2015</button>
+        <button onclick="javascript:showYear('2016')">2016</button>
+        <button onclick="javascript:showYear('2017')">2017</button>
+        <button onclick="javascript:showYear('2018')">2018</button>
+    </form>
+    {{ plotdiv|safe }}
+{% endblock %}
