@@ -7,6 +7,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 import numpy as np
 import configparser
+import nautilus.utils as u
+import nautilus.queries as q
 
 # read properties on project root
 config = configparser.RawConfigParser()
@@ -84,54 +86,59 @@ def plot_visits_per_month():
             connection.close()
 
 
-def plot_visits_per_speciality():
-  try:
-      connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+def plot_distribution_visits_per_speciality(p_firstmonth, p_lastmonth):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
-      if connection.is_connected():
-          cursor = connection.cursor()
-          cursor.execute(
-              'SELECT f_nomEspecialitat as spec, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda WHERE f_year=2019 GROUP BY f_nomEspecialitat'
-          )
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(
+              'SELECT f_nomEspecialitat as spec, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda WHERE f_month >= '+str(p_firstmonth)+' and f_month <= '+str(p_lastmonth)+' GROUP BY f_nomEspecialitat'
+            )
 
-          rows = cursor.fetchall()
-          df = pd.DataFrame([[ij for ij in i] for i in rows])
-          df = df.rename(columns={0: 'Spec', 1: 'Total'})
-          df = df.sort_values(['Total'], ascending=[0])
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'Spec', 1: 'Total'})
+            df = df.sort_values(['Total'], ascending=[0])
 
-          trace0 = go.Bar(x=df['Spec'], y=df['Total'])
+            trace0 = go.Pie(labels=df['Spec'], values=df['Total'])
 
-          data = [trace0]
-          layout = go.Layout(
-              title='Total visites per especialitat 2019',
-              titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
-              xaxis=dict(showticklabels=True,
-                         tickangle=45,
-                         tickfont=dict(family='Old Standard TT, serif',
-                                       size=14,
-                                       color='black'),
-                         showexponent='none'),
-              yaxis=dict(title='Visites en milers',
-                         titlefont=dict(family='Arial, sans-serif',
-                                        size=18,
-                                        color='lightgrey'),
-                         showticklabels=True,
-                         tickfont=dict(family='Old Standard TT, serif',
-                                       size=14,
-                                       color='black'),
-                         showexponent='none'))
-          fig = go.Figure(data=data, layout=layout)
-          return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
 
-  except Error as e:
-      print("Error while connecting to MySQL", e)
-  finally:
-      # closing database connection.
-      if (connection.is_connected()):
-          cursor.close()
-          connection.close()
+            graphTitle = 'Distribució visites per especialitat (Del ' + u.yyyymmToMonthName(p_firstmonth) + ' al ' + u.yyyymmToMonthName(p_lastmonth) + ')'
+            data = [trace0]
+            layout = go.Layout(
+                  title=graphTitle,
+                  titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
+                  autosize=False,
+                  width=1000,
+                  height=700,
+                  xaxis=dict(showticklabels=True,
+                             tickangle=45,
+                             tickfont=dict(family='Old Standard TT, serif',
+                                           size=14,
+                                           color='black'),
+                             showexponent='none'),
+                  yaxis=dict(title='Visites en milers',
+                             titlefont=dict(family='Arial, sans-serif',
+                                            size=18,
+                                            color='lightgrey'),
+                             showticklabels=True,
+                             tickfont=dict(family='Old Standard TT, serif',
+                                           size=14,
+                                           color='black'),
+                             showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
 
 
 def plot_visits_per_month_speciality(p_idEspeciality=None, p_idAgenda=None):
@@ -171,12 +178,15 @@ def plot_visits_per_month_speciality(p_idEspeciality=None, p_idAgenda=None):
                                 mode='lines+markers',
                                 name='Visites per mes')
 
+            graphTitle = 'Evolució mensual de visites'
+            if not p_idEspeciality is None:
+                graphTitle = q.get_Spec_Name(p_idEspeciality) + ': '+ graphTitle
+            if not p_idAgenda is None:
+                graphTitle = q.get_Agenda_Name(p_idAgenda) + ': '+ graphTitle
             data = [trace0, trace1]
             layout = go.Layout(
-                title='Evolució mensual de visites',
-                titlefont=dict(family='Arial, sans-serif',
-                               size=24,
-                               color='green'),
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
                            tickfont=dict(family='Old Standard TT, serif',
@@ -212,9 +222,8 @@ def plot_frequency_per_agenda(p_idAgenda):
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
             cursor = connection.cursor()
-            cursor.execute(
-                'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\''
-            )
+            sql = 'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\''
+            cursor.execute(sql)
 
             rows = cursor.fetchall()
             df = pd.DataFrame([[ij for ij in i] for i in rows])
@@ -235,8 +244,11 @@ def plot_frequency_per_agenda(p_idAgenda):
             trace2 = go.Scatter(x=df['MesNom'],
                                 y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='regressio repetitivitat')
 
+            graphTitle = q.get_Agenda_Name(p_idAgenda) + ': Freqüentació'
             data = [trace0, trace2]
             layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
                            tickfont=dict(family='Old Standard TT, serif',
@@ -296,8 +308,11 @@ def plot_patients_per_month():
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
+            graphTitle = 'Pacients per mes'
             data = [trace0_total, trace1_total, trace2]
             layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
                            tickfont=dict(family='Old Standard TT, serif',
@@ -357,8 +372,11 @@ def plot_new_patients_per_month():
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
+            graphTitle = 'Pacients nous per mes'
             data = [trace0_new, trace1_new, trace2]
             layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
                            tickfont=dict(family='Old Standard TT, serif',
@@ -430,8 +448,11 @@ def plot_distribution_new_patients():
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
+            graphTitle = 'Distribució nous pacients'
             data = [trace0_new, trace0_total]
             layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
                     showticklabels=True,
@@ -487,9 +508,9 @@ def plot_new_patients_per_speciality_per_month():
                     groupnorm='percent')
                 data.append(trace)
 
-            print(data)
-
             layout = go.Layout(
+                title='Evolució de la distribució de nous pacients per especialitat',
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
                     showticklabels=True,
@@ -554,8 +575,15 @@ def plot_evolution_new_patients_per_spec(p_idEspeciality=None, p_idAgenda=None):
             trace1_new = go.Scatter(x=df['MesNom'],
                                 y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia nous pacients')
 
+            graphTitle = 'Evolució del número de pacients nous'
+            if not p_idEspeciality is None:
+                graphTitle = q.get_Spec_Name(p_idEspeciality) + ': '+ graphTitle
+            if not p_idAgenda is None:
+                graphTitle = q.get_Agenda_Name(p_idAgenda) + ': '+ graphTitle
             data = [trace0_new, trace1_new]
             layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
                     showticklabels=True,
@@ -599,8 +627,11 @@ def plot_distribution_new_patients_per_spec(p_firstmonth, p_lastmonth):
             df = df.sort_values(['NewPatients'], ascending=[0])
             trace0_new = go.Pie(labels=df['Especialitat'], values=df['NewPatients'])
 
+            graphTitle = 'Distribució nous pacients per especialitat (Del ' + u.yyyymmToMonthName(p_firstmonth) + ' al ' + u.yyyymmToMonthName(p_lastmonth) + ')'
             data = [trace0_new]
             layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
                     showticklabels=True,
@@ -626,3 +657,59 @@ def plot_distribution_new_patients_per_spec(p_firstmonth, p_lastmonth):
             cursor.close()
             connection.close()
 
+
+def plot_first_blood_per_agenda(p_firstmonth, p_lastmonth, p_idEspeciality=None):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            sql = 'SELECT f_nomAgenda, sum(f_totalVisits) as visits, COUNT(*) as patients, sum(f_totalVisits)/COUNT(*) as visits_per_patient FROM datawarehouse.dm_first_visit WHERE f_month between '+str(p_firstmonth)+' and '+str(p_lastmonth)
+            if not p_idEspeciality is None:
+                sql = sql + ' AND f_idEspecialitat='+str(p_idEspeciality)+' '
+            sql = sql + ' GROUP BY f_nomAgenda'
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'nomAgenda', 1: 'Total', 2: 'Patients', 3: 'PerPatient'})
+            df = df.sort_values(['Total'], ascending=[0])
+            trace0 = go.Bar(x=df['nomAgenda'],
+                                y=df['Total'],
+                                name='Total visites al centre')
+
+            trace1 = go.Bar(x=df['nomAgenda'],
+                                y=df['PerPatient'],
+                                name='Mitjana per pacient')
+
+            graphTitle = 'Visites per captació en agenda (Del ' + u.yyyymmToMonthName(p_firstmonth) + ' al ' + u.yyyymmToMonthName(p_lastmonth) + ')'
+            if not p_idEspeciality is None:
+                graphTitle = q.get_Spec_Name(p_idEspeciality) + ': '+ graphTitle
+            data = [trace0, trace1]
+            layout = go.Layout(
+                title=graphTitle,
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
+                showlegend=True,
+                xaxis=dict(
+                    showticklabels=True,
+                    tickangle=45,
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=12,
+                                         color='black'),
+                ),
+                yaxis=dict(showticklabels=True,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()

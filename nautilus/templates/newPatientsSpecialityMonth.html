@@ -1,4 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-    {{ plotdiv|safe }}
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                Captació > Evolució de la distribució per especialitat
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    {{ plotdiv|safe }}
+                </div>
+            </div>
+            <div class="panel-footer">
+                <p>Distribució en percentatge de per quina especialitat s'estan generant els pacients que es visiten per primer cop al centre.</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,4 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-    {{ plotdiv|safe }}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    {{heading}}
+                </div>
+                <div class="panel-body">
+                    {{ plotdiv|safe }}
+                </div>
+                <div class="panel-footer">
+                    {{footer|safe}}
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

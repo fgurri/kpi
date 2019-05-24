@@ -28,7 +28,9 @@ def dashboard(request):
 
 
 def plot_visits_per_month(request):
-    return render(request, 'plot.html', {'plotdiv': p.plot_visits_per_month()})
+    return render(request, 'plot.html', {'plotdiv': p.plot_visits_per_month(),
+                                        'footer': 'Número de visites al centre agrupat per mes.',
+                                        'heading': 'Total visites > Evolució'})
 
 
 def plot_visits_per_month_speciality(request):
@@ -53,7 +55,17 @@ def plot_visits_per_month_agenda(request):
 
 
 def plot_visits_per_speciality(request):
-    return render(request, 'plot.html', {'plotdiv': p.plot_visits_per_speciality()})
+    monthini = request.POST.get('monthini')
+    monthfinal = request.POST.get('monthfinal')
+    if monthini is None or monthini == '' or monthfinal is None or monthfinal == ''or int(monthini) > int(monthfinal):
+        now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
+        last_month = str(now.year) + str(now.month).zfill(2)
+        monthini = last_month
+        monthfinal = last_month
+    return render(request, 'visitsSpeciality.html', {'plotdiv': p.plot_distribution_visits_per_speciality(monthini, monthfinal),
+                                                            'monthini': monthini,
+                                                            'monthfinal': monthfinal,
+                                                            'listMonths': q.get_Months()})
 
 
 def plot_new_patients_per_speciality(request):
@@ -108,3 +120,50 @@ def plot_new_patients_per_speciality_slider(request):
 
 def plot_new_patients_per_speciality_per_month(request):
     return render(request, 'newPatientsSpecialityMonth.html', {'plotdiv': p.plot_new_patients_per_speciality_per_month()})
+
+
+def plot_first_blood_per_agenda(request):
+    monthini = request.POST.get('monthini')
+    monthfinal = request.POST.get('monthfinal')
+
+    if monthini is None or monthini == '' or monthfinal is None or monthfinal == ''or int(monthini) > int(monthfinal):
+        now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
+        last_month = str(now.year) + str(now.month).zfill(2)
+        monthini = last_month
+        monthfinal = last_month
+
+    return render(request, 'firstBloodPerAgenda.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal),
+                                                            'monthini': monthini,
+                                                            'monthfinal': monthfinal,
+                                                            'listMonths': q.get_Months()})
+
+
+def plot_first_blood_per_agenda_by_spec(request):
+    monthini = request.POST.get('monthini')
+    monthfinal = request.POST.get('monthfinal')
+    id_speciality = request.POST.get('id_speciality')
+    if id_speciality is None:
+        id_speciality = '19'
+
+    if monthini is None or monthini == '' or monthfinal is None or monthfinal == ''or int(monthini) > int(monthfinal):
+        now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
+        last_month = str(now.year) + str(now.month).zfill(2)
+        monthini = last_month
+        monthfinal = last_month
+
+    return render(request, 'firstBloodPerAgendaBySpec.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal, p_idEspeciality=id_speciality),
+                                                            'monthini': monthini,
+                                                            'monthfinal': monthfinal,
+                                                            'listMonths': q.get_Months(),
+                                                            'listSpecialities': q.get_Specialities(),
+                                                            'id_speciality': id_speciality})
+
+
+def plot_month_frequency_by_agenda(request):
+    id_agenda = request.POST.get('id_agenda')
+    if id_agenda is None:
+        id_agenda = 'AG100' #medicina general default
+
+    return render(request, 'frequencyByAgenda.html', {'listAgendas': q.get_Agendas(),
+                                                        'id_agenda': id_agenda,
+                                                        'plotdiv': p.plot_frequency_per_agenda(id_agenda)})

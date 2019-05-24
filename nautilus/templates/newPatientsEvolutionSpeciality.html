@@ -1,18 +1,43 @@
 {% extends "base.html" %}
 {% block content %}
-    <form action="nptpe" method="POST" id="form_speciality">{% csrf_token %}
-        <label for="id_speciality">Especialitat:</label>
-        <select name="id_speciality">
-            <option value=""></option>
-            {% for spec in listSpecialities %}
-                {% ifequal spec.id id_speciality %}
-                    <option value="{{spec.id}}" selected="selected"/>{{spec.name}}</option>
-                {% else %}
-                    <option value="{{spec.id}}" />{{spec.name}}</option>
-                {% endifequal %}
-            {% endfor %}
-        </select>
-        <input type="submit" value="generar grafica"/>
-    </form>
-    {{ plotdiv|safe }}
+<div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Captació > Pacients nous per especialitat
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-10">
+                        <form action="nptpe" method="POST" id="form_speciality">{% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                            <label for="id_speciality">Especialitat:</label>
+                            <select name="id_speciality" class="form-control">
+                                <option value=""></option>
+                                {% for spec in listSpecialities %}
+                                    {% ifequal spec.id id_speciality %}
+                                        <option value="{{spec.id}}" selected="selected"/>{{spec.name}}</option>
+                                    {% else %}
+                                        <option value="{{spec.id}}" />{{spec.name}}</option>
+                                    {% endifequal %}
+                                {% endfor %}
+                            </select>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <input type="submit" value="generar grafica" class="btn btn-primary"/>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    {{ plotdiv|safe }}
+                </div>
+            </div>
+            <div class="panel-footer">
+                <p>Número de nous pacients de cada mes de l'especialitat sel·leccionada.</p>
+            </div>
+        </div>
+    </div>
 {% endblock %}

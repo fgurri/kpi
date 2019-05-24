@@ -93,6 +93,7 @@ def get_Months():
             cursor.close()
             connection.close()
 
+
 def get_month_list():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -106,6 +107,54 @@ def get_month_list():
             )
             monthlist = [item[0] for item in cursor.fetchall()]
             return monthlist
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def get_Spec_Name(p_idSpec):
+    try:
+        res = ''
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute('select f_nomEspecialitat from dm_especialitats where f_idEspecialitat = ' + p_idSpec)
+            rows = cursor.fetchall()
+            for result in rows:
+                res = result[0]
+            return res
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def get_Agenda_Name(p_idAgenda):
+    try:
+        res = ''
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute('select f_nomAgenda from dm_especialitat_agenda where f_idAgenda = \'' + p_idAgenda + '\'')
+            rows = cursor.fetchall()
+            for result in rows:
+                res = result[0]
+            return res
 
     except Error as e:
         print("Error while connecting to MySQL", e)

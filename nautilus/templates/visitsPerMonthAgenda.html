@@ -1,19 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-    <form action="papm" method="POST" id="form_speciality">{% csrf_token %}
-    <form action="papm" method="POST" id="form_speciality">{% csrf_token %}
-        <label for="id_agenda">Agenda:</label>
-        <select name="id_agenda">
-            <option value=""></option>
-            {% for age in listAgendas %}
-                {% ifequal age.id id_agenda %}
-                    <option value="{{age.id}}" selected="selected"/>{{age.name}}</option>
-                {% else %}
-                    <option value="{{age.id}}" />{{age.name}}</option>
-                {% endifequal %}
-            {% endfor %}
-        </select>
-        <input type="submit" value="generar grafica"/>
-    </form>
-    {{ plotdiv|safe }}
+<div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Total visites > Evolució per agenda
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-10">
+                        <form action="papm" method="POST" id="form_speciality">{% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group col-md-2">
+                                <label for="id_agenda">Agenda:</label>
+                                <select name="id_agenda" class="form-control">
+                                    <option value=""></option>
+                                    {% for age in listAgendas %}
+                                        {% ifequal age.id id_agenda %}
+                                            <option value="{{age.id}}" selected="selected"/>{{age.name}}</option>
+                                        {% else %}
+                                            <option value="{{age.id}}" />{{age.name}}</option>
+                                        {% endifequal %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <input type="submit" value="generar grafica" class="btn btn-primary"/>
+                            </div>
+                        </div>
+                        </form>
+                        </div>
+                </div>
+                <div class="row">
+                    {{ plotdiv|safe }}
+                </div>
+            </div>
+            <div class="panel-footer">
+                <p>Número total de visites per mes en l'agenda sel·leccionada.</p>
+            </div>
+        </div>
+    </div>
 {% endblock %}
