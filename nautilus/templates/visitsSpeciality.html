@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block scripts %}
+
+    <script>
+    $(document).ready(function() {
+        $("#ex25").slider({{ sliderdict|safe }});
+
+        $("#btnsubmit").click(function () {
+            $("#rangevalues").val ("'" + $("#ex25").slider("getValue") + "'");
+        });
+    });
+
+    function showYear (year) {
+        document.getElementById("monthini").value = year+"01";
+        document.getElementById("monthfinal").value = year+"12";
+    }
+
+    function currentYear() {
+        var d = new Date();
+        var monthini = new Date(d.getFullYear(), 0, 1);
+        var monthfinal = new Date(d.getFullYear(), d.getMonth()-1, 1);
+        document.getElementById("monthini").value = monthini.getFullYear() + ("0" + (monthini.getMonth()+1)).slice(-2);
+        document.getElementById("monthfinal").value = monthfinal.getFullYear() + ("0" + (monthfinal.getMonth()+1)).slice(-2);
+    }
+
+    function last12months () {
+        var d = new Date();
+        var monthini = new Date(d.getFullYear()-1, d.getMonth(), 1);
+        var monthfinal = new Date(d.getFullYear(), d.getMonth()-1, 1);
+        document.getElementById("monthini").value = monthini.getFullYear() + ("0" + (monthini.getMonth()+1)).slice(-2);
+        document.getElementById("monthfinal").value = monthfinal.getFullYear() + ("0" + (monthfinal.getMonth()+1)).slice(-2);
+    }
+
+    </script>
+{% endblock %}
+{% block content %}
+<div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Total visites > Distribució per especialitat en periode sel·leccionat
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-10">
+                        <form action="pcpe" method="POST" id="form_range">{% csrf_token %}
+                            <div class="form-row">
+                                <div class="form-group col-md-2">
+                                    <label for="monthini">Mes inicial:</label>
+                                    <select id="monthini" name="monthini" class="form-control">
+                                        <option value=""></option>
+                                        {% for month in listMonths %}
+                                            {% ifequal month.id monthini %}
+                                                <option value="{{month.id}}" selected="selected"/>{{month.name}}</option>
+                                            {% else %}
+                                                <option value="{{month.id}}"/>{{month.name}}</option>
+                                            {% endifequal %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="monthfinal">Mes final:</label>
+                                    <select id="monthfinal" name="monthfinal" class="form-control">
+                                        <option value=""></option>
+                                        {% for month in listMonths %}
+                                            {% ifequal month.id monthfinal %}
+                                                <option value="{{month.id}}" selected="selected"/>{{month.name}}</option>
+                                            {% else %}
+                                                <option value="{{month.id}}"/>{{month.name}}</option>
+                                            {% endifequal %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <input type="submit" id="btnsubmit" value="generar gràfica" class="btn btn-primary"/>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label for="monthfinal">Accessos directes:</label>
+                                    <button class="btn" onclick="javascript:showYear('2013')">2013</button>
+                                    <button class="btn" onclick="javascript:showYear('2014')">2014</button>
+                                    <button class="btn" onclick="javascript:showYear('2015')">2015</button>
+                                    <button class="btn" onclick="javascript:showYear('2016')">2016</button>
+                                    <button class="btn" onclick="javascript:showYear('2017')">2017</button>
+                                    <button class="btn" onclick="javascript:showYear('2018')">2018</button>
+                                    <button class="btn" onclick="javascript:currentYear()">2019</button>
+                                    <button class="btn" onclick="javascript:last12months()">Ultims 12 mesos</button>
+                                </div>
+                            </div>
+                        </form>
+                        </div>
+                </div>
+                <div class="row">
+                    {{ plotdiv|safe }}
+                </div>
+            </div>
+            <div class="panel-footer">
+                <p>Percentatge de visites per especialitat en els mesos sel·leccionats.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

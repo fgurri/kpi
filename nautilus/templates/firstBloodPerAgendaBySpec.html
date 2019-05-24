@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block scripts %}
+
+    <script>
+        function showYear (year) {
+            document.getElementById("monthini").value = year+"01";
+            document.getElementById("monthfinal").value = year+"12";
+        }
+
+        function currentYear() {
+            var d = new Date();
+            var monthini = new Date(d.getFullYear(), 0, 1);
+            var monthfinal = new Date(d.getFullYear(), d.getMonth()-1, 1);
+            document.getElementById("monthini").value = monthini.getFullYear() + ("0" + (monthini.getMonth()+1)).slice(-2);
+            document.getElementById("monthfinal").value = monthfinal.getFullYear() + ("0" + (monthfinal.getMonth()+1)).slice(-2);
+        }
+
+        function last12months () {
+            var d = new Date();
+            var monthini = new Date(d.getFullYear()-1, d.getMonth(), 1);
+            var monthfinal = new Date(d.getFullYear(), d.getMonth()-1, 1);
+            document.getElementById("monthini").value = monthini.getFullYear() + ("0" + (monthini.getMonth()+1)).slice(-2);
+            document.getElementById("monthfinal").value = monthfinal.getFullYear() + ("0" + (monthfinal.getMonth()+1)).slice(-2);
+        }
+    </script>
+{% endblock %}
+{% block content %}
+<div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Fidelitzacio > Visites totals per captació en agenda per especialitat
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-10">
+                        <form action="fbpaps" method="POST" id="form_range">{% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="id_speciality">Especialitat:</label>
+                                <select name="id_speciality" class="form-control">
+                                    <option value=""></option>
+                                    {% for spec in listSpecialities %}
+                                        {% ifequal spec.id id_speciality %}
+                                            <option value="{{spec.id}}" selected="selected"/>{{spec.name}}</option>
+                                        {% else %}
+                                            <option value="{{spec.id}}" />{{spec.name}}</option>
+                                        {% endifequal %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="monthini">Mes inicial:</label>
+                                <select id="monthini" name="monthini" class="form-control">
+                                    <option value=""></option>
+                                    {% for month in listMonths %}
+                                        {% ifequal month.id monthini %}
+                                            <option value="{{month.id}}" selected="selected"/>{{month.name}}</option>
+                                        {% else %}
+                                            <option value="{{month.id}}"/>{{month.name}}</option>
+                                        {% endifequal %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="monthfinal">Mes final:</label>
+                                <select id="monthfinal" name="monthfinal" class="form-control">
+                                    <option value=""></option>
+                                    {% for month in listMonths %}
+                                        {% ifequal month.id monthfinal %}
+                                            <option value="{{month.id}}" selected="selected"/>{{month.name}}</option>
+                                        {% else %}
+                                            <option value="{{month.id}}"/>{{month.name}}</option>
+                                        {% endifequal %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <input type="submit" id="btnsubmit" value="generar grafica" class="btn btn-primary"/>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label for="monthfinal">Accessos directes:</label>
+                            <button class="btn" onclick="javascript:showYear('2013')">2013</button>
+                            <button class="btn" onclick="javascript:showYear('2014')">2014</button>
+                            <button class="btn" onclick="javascript:showYear('2015')">2015</button>
+                            <button class="btn" onclick="javascript:showYear('2016')">2016</button>
+                            <button class="btn" onclick="javascript:showYear('2017')">2017</button>
+                            <button class="btn" onclick="javascript:showYear('2018')">2018</button>
+                            <button class="btn" onclick="javascript:currentYear()">2019</button>
+                            <button class="btn" onclick="javascript:last12months()">Ultims 12 mesos</button>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    {{ plotdiv|safe }}
+                </div>
+                <div class="panel-footer">
+                    <p>Número de visites en funció de quina va ser la primera agenda en la que es van visitar. Es mostren totes les agendes de l'especialitat sel·leccionada.</p>
+                    <p><ul>Mètode de càlcul:
+                            <li>Buscar la primera visita de cada pacient</li>
+                            <li>Agrupar-les per mes i agenda de la primera visita</li>
+                            <li>Comptar totes les visites posteriors al centre de cada pacient</li>
+                        </ul>
+                    </p>
+                </div>
+            </div>
+        </div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Fidelitzacio > Frequentació per agenda
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-10">
+                        <form action="fpa" method="POST" id="form_speciality">{% csrf_token %}
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label for="id_agenda">Agenda:</label>
+                                    <select name="id_agenda" class="form-control">
+                                        <option value=""></option>
+                                        {% for age in listAgendas %}
+                                            {% ifequal age.id id_agenda %}
+                                                <option value="{{age.id}}" selected="selected"/>{{age.name}}</option>
+                                            {% else %}
+                                                <option value="{{age.id}}" />{{age.name}}</option>
+                                            {% endifequal %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <input type="submit" value="generar grafica" class="btn btn-primary"/>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    {{ plotdiv|safe }}
+                </div>
+              </div>
+              <div class="panel-footer">
+                <p>Relació entre el número de visites i pacients en cada mes.</p>
+                <p><ul>Mètode de càlcul:
+                        <li>Per cada mes, comptar el total de visites en l'agenda seleccionada</li>
+                        <li>Per cada mes, comptar el numero de pacients diferents atesos</li>
+                        <li>Calcular-ne la ratio (visites/pacients)</li>
+                    </ul>
+                </p>
+                <p>Una freqüentació de 1 vol dir que tots els pacients han vingut només una vegada. Una freqüentació de 1,5 vol dir que proporcionalment cada 2 pacients han generat una tercera visita extra (3/2 = 1,5). Etc</p>
+                <p>Aquest índex pot no tenir sentit en funció de la naturalesa de l'agenda. Per exemple, una agenda de proves diagnòstiques lo habitual és que la freqüentació sigui sempre 1 o molt propera a 1 (no és habitual que una persona es faci dos TACs en un mateix mes). En canvi en agendes com per exemple Fisioterapia la freqüentació sí té sentit perque un pacient ha de seguir un tractament basat en repetició diària de sessions.</p>
+              </div>
+            </div>
+        </div>
+{% endblock %}
