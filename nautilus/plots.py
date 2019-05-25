@@ -9,6 +9,8 @@ import numpy as np
 import configparser
 import nautilus.utils as u
 import nautilus.queries as q
+import datetime
+import dateutil.relativedelta
 
 # read properties on project root
 config = configparser.RawConfigParser()
@@ -65,8 +67,7 @@ def plot_visits_per_month():
                                          size=14,
                                          color='black'),
                            showexponent='none'),
-                yaxis=dict(title='Visites en milers',
-                           titlefont=dict(family='Arial, sans-serif',
+                yaxis=dict(titlefont=dict(family='Arial, sans-serif',
                                           size=18,
                                           color='lightgrey'),
                            showticklabels=True,
@@ -120,8 +121,7 @@ def plot_distribution_visits_per_speciality(p_firstmonth, p_lastmonth):
                                            size=14,
                                            color='black'),
                              showexponent='none'),
-                  yaxis=dict(title='Visites en milers',
-                             titlefont=dict(family='Arial, sans-serif',
+                  yaxis=dict(titlefont=dict(family='Arial, sans-serif',
                                             size=18,
                                             color='lightgrey'),
                              showticklabels=True,
@@ -193,8 +193,7 @@ def plot_visits_per_month_speciality(p_idEspeciality=None, p_idAgenda=None):
                                          size=14,
                                          color='black'),
                            showexponent='none'),
-                yaxis=dict(title='Visites en milers',
-                           titlefont=dict(family='Arial, sans-serif',
+                yaxis=dict(titlefont=dict(family='Arial, sans-serif',
                                           size=18,
                                           color='lightgrey'),
                            showticklabels=True,
@@ -281,7 +280,7 @@ def plot_patients_per_month():
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute(
-                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_patients_per_month'
+                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_stats_per_month'
             )
 
             rows = cursor.fetchall()
@@ -345,7 +344,7 @@ def plot_new_patients_per_month():
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute(
-                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_patients_per_month'
+                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_stats_per_month'
             )
 
             rows = cursor.fetchall()
@@ -409,7 +408,7 @@ def plot_distribution_new_patients():
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute(
-                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients-f_new_patients as f_patients, f_new_patients FROM datawarehouse.dm2_patients_per_month'
+                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients-f_new_patients as f_patients, f_new_patients FROM datawarehouse.dm2_stats_per_month'
             )
 
             rows = cursor.fetchall()
@@ -712,4 +711,207 @@ def plot_first_blood_per_agenda(p_firstmonth, p_lastmonth, p_idEspeciality=None)
         # closing database connection.
         if (connection.is_connected()):
             cursor.close()
+            connection.close()
+
+
+def plot_last_visits_per_month():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            # we don't want to show future months, so we filter till past month
+            now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
+            last_month = str(now.year) + str(now.month+1).zfill(2)
+            cursor.execute(
+                'SELECT f_lastmonth, CONCAT(LEFT(f_lastmonth,4), "-", f_lastmonthname) as mesnom, count(*) FROM datawarehouse.dm_first_visit WHERE f_lastmonth < '+ last_month + ' GROUP BY f_lastmonth, CONCAT(LEFT(f_lastmonth,4), "-", f_lastmonthname)'
+            )
+
+            rows = cursor.fetchall()
+            df = pd.DataFrame([[ij for ij in i] for i in rows])
+            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Total'})
+            df = df.sort_values(['Mes'], ascending=[1])
+            trace0 = go.Scatter(x=df['MesNom'],
+                                y=df['Total'],
+                                mode='lines+markers',
+                                name='Ultimes visites per mes')
+            index_start_odonto_omi = list(df['MesNom']).index("2017-Dec")
+            value_start_odonto_omi = df['Total'].get(index_start_odonto_omi)
+
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
+            poly_reg = PolynomialFeatures(degree=4)
+            X_poly = poly_reg.fit_transform(linear_x)
+            pol_reg = LinearRegression()
+            pol_reg.fit(X_poly, df['Total'])
+            trace1 = go.Scatter(x=df['MesNom'],
+                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia')
+
+            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
+                                y=[0, df['Total'].max()],
+                                mode='lines',
+                                name='Inici odontologia a OMI360',
+                                line=dict(dash='dot'))
+
+            data = [trace0, trace1, trace2]
+            layout = go.Layout(
+                title='Evolució del número de últimes visites per mes',
+                titlefont=dict(family='Arial, sans-serif',
+                               size=24,
+                               color='green'),
+                xaxis=dict(showticklabels=True,
+                           tickangle=45,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'),
+                yaxis=dict(titlefont=dict(family='Arial, sans-serif',
+                                          size=18,
+                                          color='lightgrey'),
+                           showticklabels=True,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+def plot_visits_per_patient():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            df = pd.read_sql ('SELECT f_numHistoria as Patient, f_totalVisits as Total FROM datawarehouse.dm_first_visit', connection)
+            df[df['Total']>50] = 50
+            trace0 = go.Histogram(x=df['Total'],
+                                name='Visites per pacient')
+
+
+            data = [trace0]
+            layout = go.Layout(
+                title='Distribució del número de visites per pacient',
+                titlefont=dict(family='Arial, sans-serif',
+                               size=24,
+                               color='green'),
+                xaxis=dict(showticklabels=True,
+                           tickangle=45,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none',
+                           title='Vistes'),
+                yaxis=dict(showticklabels=True,
+                            title='Número de pacients',
+                            tickformat='.0f',
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            connection.close()
+
+
+def plot_distribution_casual_vs_fidelizied():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            sql = 'SELECT f_month as mes, CONCAT(LEFT(f_month,4), "-", f_monthname) as MesNom, f_casuals as casuals, f_fidelitzats as fidelitzats, f_visits_casuals as visitsCasuals, f_visits_fidelitzats as visitsFidelitzats FROM datawarehouse.dm2_stats_per_month ORDER BY f_month ASC'
+            df = pd.read_sql(sql, connection)
+            trace_casual = go.Scatter(x=df['MesNom'],
+                                y=df['casuals'],
+                                mode='lines',
+                                name='Pacients casuals',
+                                stackgroup='one',
+                                groupnorm='percent')
+
+            trace_fidelizied = go.Scatter(x=df['MesNom'],
+                                y=df['fidelitzats'],
+                                mode='lines',
+                                name='Pacients fidelitzats',
+                                stackgroup='one')
+
+            data = [trace_casual, trace_fidelizied]
+            layout = go.Layout(
+                title='Distribució pacients casuals vs fidelitzats',
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
+                showlegend=True,
+                xaxis=dict(
+                    showticklabels=True,
+                    tickangle=45,
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    type='category',
+                ),
+                yaxis=dict(
+                    type='linear',
+                    range=[1, 100],
+                    dtick=20,
+                    ticksuffix='%'))
+            fig = go.Figure(data=data, layout=layout)
+            plotdiv_patients = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+            trace_visits_casual = go.Scatter(x=df['MesNom'],
+                                y=df['visitsCasuals'],
+                                mode='lines',
+                                name='Visites casuals',
+                                stackgroup='one',
+                                groupnorm='percent')
+
+            trace_visits_fidelizied = go.Scatter(x=df['MesNom'],
+                                y=df['visitsFidelitzats'],
+                                mode='lines',
+                                name='Visites fidelitzats',
+                                stackgroup='one')
+
+            data = [trace_visits_casual, trace_visits_fidelizied]
+            layout = go.Layout(
+                title='Distribució visites casuals vs fidelitzats',
+                titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
+                showlegend=True,
+                xaxis=dict(
+                    showticklabels=True,
+                    tickangle=45,
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    type='category',
+                ),
+                yaxis=dict(
+                    type='linear',
+                    range=[1, 100],
+                    dtick=20,
+                    ticksuffix='%'))
+            fig = go.Figure(data=data, layout=layout)
+            plotdiv_visits = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+            return plotdiv_patients, plotdiv_visits
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
             connection.close()

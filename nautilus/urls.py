@@ -13,5 +13,8 @@ urlpatterns = [
     path('nppepm', views.plot_new_patients_per_speciality_per_month, name='nppepm'),
     path('fbpa', views.plot_first_blood_per_agenda, name='fbpa'),
     path('fbpaps', views.plot_first_blood_per_agenda_by_spec, name='fbpaps'),
-    path('fpa', views.plot_month_frequency_by_agenda, name='fpa')
+    path('fpa', views.plot_month_frequency_by_agenda, name='fpa'),
+    path('lvpm', views.plot_last_visits_per_month, name='lvpm'),
+    path('vpp', views.plot_visits_per_patient, name='vpp'),
+    path('pcpf', views.plot_casual_vs_fidelizied, name='pcpf')
 ]

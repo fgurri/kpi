@@ -33,6 +33,34 @@ def plot_visits_per_month(request):
                                         'heading': 'Total visites > Evolució'})
 
 
+def plot_visits_per_patient(request):
+    footer = '<p>Distribució del número de visites per pacient.</p>'
+    footer = footer + '<p>Per facilitar la visualització de les dades, els pacients amb més de 50 visites s\'han agrupat tots en el grup de 50 visites.</p>'
+    return render(request, 'plot.html', {'plotdiv': p.plot_visits_per_patient(),
+                                        'footer': footer,
+                                        'heading': 'Fidelització > Distribució número de visites per pacient'})
+
+
+def plot_casual_vs_fidelizied(request):
+    plotdiv_patients, plotdiv_visits = p.plot_distribution_casual_vs_fidelizied()
+    return render(request, 'casualvsFidelizied.html', {'plotdiv_patients': plotdiv_patients,
+                                                        'plotdiv_visits': plotdiv_visits})
+
+
+
+def plot_last_visits_per_month(request):
+    footer = '<p>Número de últimes visites al centre agrupat per mes.</p>'
+    footer = footer + '<p><ul>Mètode de càlcul:'
+    footer = footer + '<li>Buscar la última visita de cada pacient</li>'
+    footer = footer + '<li>Agrupar-les totes per mes i sumar-les</li></ul></p>'
+    footer = footer + '<p>No compta el número de pacients que es perden perquè no tenim informació sobre si tornaran a visitar-se.</p>'
+    footer = footer + '<p>Si tenim una estimació de la mitjana de mesos que triga un pacient en tornar a visitar-se podem fer un càlcul del volum de pacients actius. És a dir, si sabem que un pacient triga en promig 8 mesos en tornar a visitar-se al centre llavors sumant els valors dels últims 8 mesos tindrem el volum estimat de pacients actius amb els que treballa el centre</p>'
+
+    return render(request, 'plot.html', {'plotdiv': p.plot_last_visits_per_month(),
+                                        'footer': footer ,
+                                        'heading': 'Fidelització > Fuga de pacients'})
+
+
 def plot_visits_per_month_speciality(request):
     id_speciality = request.POST.get('id_speciality')
     if id_speciality is None:

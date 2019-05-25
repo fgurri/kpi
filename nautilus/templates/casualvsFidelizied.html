@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    Fidelització > Distribució de pacients casuals vs fidelitzats
+                </div>
+                <div class="panel-body">
+                    {{ plotdiv_patients|safe }}
+                    {{ plotdiv_visits|safe }}
+                </div>
+                <div class="panel-footer">
+                    <p>Distribució percentual del número de pacients casuals i fidelitzats.</p>
+                    <p>Es considera pacient casual aquell que ha vingut menys de 5 vegades al centre. En cas contrari compta com a fidelitzat.</p>
+                    <p>Hi ha una desvió al alça de casuals en els mesos recents que es correspon a aquells pacients que són nous però encara no sabem si seran fidelitzats o no. Es a dir, pacients nous que encara no sabem si generaran 5 visites o mes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
