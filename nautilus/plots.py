@@ -7,16 +7,30 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 import numpy as np
 import configparser
-import nautilus.utils as u
-import nautilus.queries as q
 import datetime
 import dateutil.relativedelta
+
+import nautilus.utils as u
+import nautilus.queries as q
+
 
 # read properties on project root
 config = configparser.RawConfigParser()
 config.read(r'nautilus.properties')
 
+""" Generates a offline plotly plot with the graph 'total visits per month'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
 
+    usage::
+
+        >>> import plots
+        >>> plot = plot_visits_per_month()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param:
+    :rtype: string
+"""
 def plot_visits_per_month():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -24,21 +38,13 @@ def plot_visits_per_month():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-                'SELECT f_month as mes, CONCAT(f_year, "-", f_monthname) as mesnom, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda GROUP BY f_month,  CONCAT(f_year, "-", f_monthname)'
-            )
+            sql = 'SELECT f_month as Mes, CONCAT(f_year, "-", f_monthname) as MesNom, sum(f_count) as Total FROM datawarehouse.dm1_visits_per_agenda GROUP BY f_month,  CONCAT(f_year, "-", f_monthname) ORDER BY f_month ASC'
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Total'})
-            df = df.sort_values(['Mes'], ascending=[1])
-            trace0 = go.Scatter(x=df['MesNom'],
+            df = pd.read_sql(sql, connection)
+            trace_visites = go.Scatter(x=df['MesNom'],
                                 y=df['Total'],
                                 mode='lines+markers',
                                 name='Visites per mes')
-            index_start_odonto_omi = list(df['MesNom']).index("2017-Dec")
-            value_start_odonto_omi = df['Total'].get(index_start_odonto_omi)
 
             linear_x = np.r_[0:len(df)]
             linear_x = np.arange(0, len(df)).reshape(-1, 1)
@@ -46,16 +52,19 @@ def plot_visits_per_month():
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['Total'])
-            trace1 = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression_visites = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='Tendencia')
 
-            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
+            trace_omi_annotation = go.Scatter(x=["2017-Dec", "2017-Dec"],
                                 y=[0, df['Total'].max()],
                                 mode='lines',
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
-            data = [trace0, trace1, trace2]
+            data = [trace_visites, trace_regression_visites, trace_omi_annotation]
             layout = go.Layout(
                 title='Evolució del número de visites per mes',
                 titlefont=dict(family='Arial, sans-serif',
@@ -83,34 +92,39 @@ def plot_visits_per_month():
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
-def plot_distribution_visits_per_speciality(p_firstmonth, p_lastmonth):
+""" Generates a offline plotly plot with the graph 'Distribution of visits per speciality'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_distribution_visits_per_speciality('201801', '201812')
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param p_first_month: starting month of range values in YYYYMM format
+    :param p_last_month: ending month of range values in YYYYMM format
+    :rtype: string
+"""
+def plot_distribution_visits_per_speciality(p_first_month, p_last_month):
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-              'SELECT f_nomEspecialitat as spec, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda WHERE f_month >= '+str(p_firstmonth)+' and f_month <= '+str(p_lastmonth)+' GROUP BY f_nomEspecialitat'
-            )
+            sql = 'SELECT f_nomEspecialitat as Spec, sum(f_count) as Total FROM datawarehouse.dm1_visits_per_agenda WHERE f_month >= '+str(p_first_month)+' and f_month <= '+str(p_last_month)+' GROUP BY f_nomEspecialitat ORDER BY sum(f_count) DESC'
+            df = pd.read_sql(sql, connection)
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Spec', 1: 'Total'})
-            df = df.sort_values(['Total'], ascending=[0])
+            trace = go.Pie(labels=df['Spec'], values=df['Total'])
 
-            trace0 = go.Pie(labels=df['Spec'], values=df['Total'])
-
-
-            graphTitle = 'Distribució visites per especialitat (Del ' + u.yyyymmToMonthName(p_firstmonth) + ' al ' + u.yyyymmToMonthName(p_lastmonth) + ')'
-            data = [trace0]
+            graph_title = 'Distribució visites per especialitat (Del ' + u.yyyymmToMonthName(p_first_month) + ' al ' + u.yyyymmToMonthName(p_last_month) + ')'
+            data = [trace]
             layout = go.Layout(
-                  title=graphTitle,
+                  title=graph_title,
                   titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                   autosize=False,
                   width=1000,
@@ -137,55 +151,69 @@ def plot_distribution_visits_per_speciality(p_firstmonth, p_lastmonth):
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
-def plot_visits_per_month_speciality(p_idEspeciality=None, p_idAgenda=None):
+""" Generates a offline plotly plot with the graph 'Visits per month by speciality'.
+    You can choose to filter by speciality or by agenda, but one of both must be set.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_visits_per_month_speciality(p_id_especiality=19)
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param p_id_especiality: speciality identifier
+    :param p_id_agenda: agenda identifier
+    :rtype: string
+"""
+def plot_visits_per_month_speciality(p_id_especiality=None, p_id_agenda=None):
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            sql = 'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, sum(f_count) as total FROM datawarehouse.dm1_visits_per_agenda WHERE '
-            if p_idEspeciality is None and p_idAgenda is None:
-                p_idEspeciality=19 # medicina general per defecte
-            if (not p_idEspeciality is None) and p_idEspeciality != "":
-                sql = sql + 'f_idEspecialitat='+str(p_idEspeciality)+' '
+            sql = 'SELECT CONCAT(f_year, "-", f_monthname) as MesNom, f_month, sum(f_count) as Total FROM datawarehouse.dm1_visits_per_agenda WHERE '
+            if (p_id_especiality is None) and (p_id_agenda is None):
+                p_id_especiality = 19 # medicina general per defecte
+            if (p_id_especiality is not None) and (p_id_especiality != ""):
+                sql = sql + 'f_idEspecialitat='+str(p_id_especiality)+' '
             else:
-                if (not p_idAgenda is None) and p_idAgenda != "":
-                    sql = sql + 'f_idAgenda=\''+str(p_idAgenda)+'\' '
-            sql = sql + 'GROUP BY CONCAT(f_year, "-", f_monthname), f_month'
-            cursor.execute(sql)
+                if (p_id_agenda is not None) and (p_id_agenda != ""):
+                    sql = sql + 'f_idAgenda=\''+str(p_id_agenda)+'\' '
+            sql = sql + 'GROUP BY CONCAT(f_year, "-", f_monthname), f_month ORDER BY f_month ASC'
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'MesNom', 1: 'f_month', 2: 'Total'})
-            df = df.sort_values(['f_month'], ascending=[1])
+            df = pd.read_sql(sql, connection)
+            if df.empty:
+                return None
             linear_x = np.r_[0:len(df)]
             linear_x = np.arange(0, len(df)).reshape(-1, 1)
             poly_reg = PolynomialFeatures(degree=4)
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['Total'])
-            trace1 = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia Especialitat')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='Tendencia Especialitat')
 
-            trace0 = go.Scatter(x=df['MesNom'],
+            trace = go.Scatter(x=df['MesNom'],
                                 y=df['Total'],
                                 mode='lines+markers',
                                 name='Visites per mes')
 
-            graphTitle = 'Evolució mensual de visites'
-            if not p_idEspeciality is None:
-                graphTitle = q.get_Spec_Name(p_idEspeciality) + ': '+ graphTitle
-            if not p_idAgenda is None:
-                graphTitle = q.get_Agenda_Name(p_idAgenda) + ': '+ graphTitle
-            data = [trace0, trace1]
+            graph_title = 'Evolució mensual de visites'
+            if p_id_especiality is not None:
+                graph_title = q.get_Spec_Name(p_id_especiality) + ': '+ graph_title
+            if p_id_agenda is not None:
+                graph_title = q.get_Agenda_Name(p_id_agenda) + ': '+ graph_title
+            data = [trace, trace_regression]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
@@ -209,44 +237,53 @@ def plot_visits_per_month_speciality(p_idEspeciality=None, p_idAgenda=None):
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
-def plot_frequency_per_agenda(p_idAgenda):
+""" Generates a offline plotly plot with the graph 'Frequency by agenda'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_frequency_per_agenda(p_id_agenda='AG100')
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param p_id_agenda: agenda identifier
+    :rtype: string
+"""
+def plot_frequency_per_agenda(p_id_agenda):
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            sql = 'SELECT CONCAT(f_year, "-", f_monthname) as mesnom, f_month, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_idAgenda)+'\''
-            cursor.execute(sql)
+            sql = 'SELECT CONCAT(f_year, "-", f_monthname) as MesNom, f_month as Mes, f_count/f_patients as rep FROM datawarehouse.dm1_visits_per_agenda WHERE f_idAgenda=\''+str(p_id_agenda)+'\' ORDER BY f_month ASC'
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'MesNom', 1: 'f_month', 2: 'rep'})
-            df = df.sort_values(['f_month'], ascending=[1])
-
-            linear_x = np.r_[0:len(df)]
-            linear_x = np.arange(0, len(df)).reshape(-1, 1)
-            trace0 = go.Scatter(x=df['MesNom'],
+            df = pd.read_sql(sql, connection)
+            trace_frequency = go.Scatter(x=df['MesNom'],
                                 y=df['rep'],
                                 mode='lines+markers',
                                 name='repetitivitat')
 
+            linear_x = np.r_[0:len(df)]
+            linear_x = np.arange(0, len(df)).reshape(-1, 1)
             poly_reg = PolynomialFeatures(degree=4)
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['rep'])
-            trace2 = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='regressio repetitivitat')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='regressio repetitivitat')
 
-            graphTitle = q.get_Agenda_Name(p_idAgenda) + ': Freqüentació'
-            data = [trace0, trace2]
+            graph_title = q.get_Agenda_Name(p_id_agenda) + ': repetitivitat'
+            data = [trace_frequency, trace_regression]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
@@ -267,10 +304,22 @@ def plot_frequency_per_agenda(p_idAgenda):
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'Patients per month'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_patients_per_month()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_patients_per_month():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -278,16 +327,10 @@ def plot_patients_per_month():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_stats_per_month'
-            )
+            sql = 'SELECT f_month as Mes , CONCAT(LEFT(f_month, 4), "-", f_monthname) as MesNom, f_patients as Patients, f_new_patients FROM datawarehouse.dm2_stats_per_month ORDER BY f_month ASC'
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Patients', 3: 'NewPatients'})
-            df = df.sort_values(['Mes'], ascending=[1])
-            trace0_total = go.Scatter(x=df['MesNom'],
+            df = pd.read_sql(sql, connection)
+            trace_patients = go.Scatter(x=df['MesNom'],
                                 y=df['Patients'],
                                 mode='lines+markers',
                                 name='Total pacients')
@@ -298,19 +341,22 @@ def plot_patients_per_month():
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['Patients'])
-            trace1_total = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia total pacients')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression_patients = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='Tendencia total pacients')
 
-            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
+            trace_omi_annotation = go.Scatter(x=["2017-Dec", "2017-Dec"],
                                 y=[0, df['Patients'].max()],
                                 mode='lines',
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
-            graphTitle = 'Pacients per mes'
-            data = [trace0_total, trace1_total, trace2]
+            graph_title = 'Pacients per mes'
+            data = [trace_patients, trace_regression_patients, trace_omi_annotation]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
@@ -331,10 +377,22 @@ def plot_patients_per_month():
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'New patients per month'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_new_patients_per_month()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_new_patients_per_month():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -342,16 +400,10 @@ def plot_new_patients_per_month():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients, f_new_patients FROM datawarehouse.dm2_stats_per_month'
-            )
+            sql = 'SELECT f_month as Mes, CONCAT(LEFT(f_month, 4), "-", f_monthname) as MesNom, f_patients as Patients, f_new_patients as NewPatients FROM datawarehouse.dm2_stats_per_month ORDER BY f_month ASC'
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Patients', 3: 'NewPatients'})
-            df = df.sort_values(['Mes'], ascending=[1])
-            trace0_new = go.Scatter(x=df['MesNom'],
+            df = pd.read_sql(sql, connection)
+            trace_new_patients = go.Scatter(x=df['MesNom'],
                                 y=df['NewPatients'],
                                 mode='lines+markers',
                                 name='Pacients nous')
@@ -362,19 +414,22 @@ def plot_new_patients_per_month():
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['NewPatients'])
-            trace1_new = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia nous pacients')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression_new_patients = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='Tendencia nous pacients')
 
-            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
+            trace_omi_annotation = go.Scatter(x=["2017-Dec", "2017-Dec"],
                                 y=[0, df['NewPatients'].max()],
                                 mode='lines',
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
-            graphTitle = 'Pacients nous per mes'
-            data = [trace0_new, trace1_new, trace2]
+            graph_title = 'Pacients nous per mes'
+            data = [trace_new_patients, trace_regression_new_patients, trace_omi_annotation]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 xaxis=dict(showticklabels=True,
                            tickangle=45,
@@ -395,10 +450,22 @@ def plot_new_patients_per_month():
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'Distribution patients vs new patients'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_distribution_new_patients()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_distribution_new_patients():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -406,51 +473,26 @@ def plot_distribution_new_patients():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-                'SELECT f_month, CONCAT(LEFT(f_month, 4), "-", f_monthname) as f_monthname, f_patients-f_new_patients as f_patients, f_new_patients FROM datawarehouse.dm2_stats_per_month'
-            )
+            sql = 'SELECT f_month as Mes, CONCAT(LEFT(f_month, 4), "-", f_monthname) as MesNom, f_patients-f_new_patients as Patients, f_new_patients as NewPatients FROM datawarehouse.dm2_stats_per_month ORDER BY f_month ASC'
+            df = pd.read_sql(sql, connection)
 
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Patients', 3: 'NewPatients'})
-            df = df.sort_values(['Mes'], ascending=[1])
-            trace0_new = go.Scatter(x=df['MesNom'],
+            trace_new_patients = go.Scatter(x=df['MesNom'],
                                 y=df['NewPatients'],
                                 mode='lines',
                                 name='Pacients nous',
                                 stackgroup='one',
                                 groupnorm='percent')
 
-            linear_x = np.r_[0:len(df)]
-            linear_x = np.arange(0, len(df)).reshape(-1, 1)
-            poly_reg = PolynomialFeatures(degree=4)
-            X_poly = poly_reg.fit_transform(linear_x)
-            pol_reg = LinearRegression()
-            pol_reg.fit(X_poly, df['NewPatients'])
-            trace1_new = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia nous pacients')
-
-            trace0_total = go.Scatter(x=df['MesNom'],
+            trace_patients = go.Scatter(x=df['MesNom'],
                                 y=df['Patients'],
                                 mode='lines',
                                 name='Pacients vells',
                                 stackgroup='one')
 
-            pol_reg.fit(X_poly, df['Patients'])
-            trace1_total = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia total pacients')
-
-            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
-                                y=[0, df['NewPatients'].max()],
-                                mode='lines',
-                                name='Inici odontologia a OMI360',
-                                line=dict(dash='dot'))
-
-            graphTitle = 'Distribució nous pacients'
-            data = [trace0_new, trace0_total]
+            graph_title = 'Distribució nous pacients'
+            data = [trace_new_patients, trace_patients]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
@@ -474,10 +516,22 @@ def plot_distribution_new_patients():
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'month evolution of new Patients per speciality'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_new_patients_per_speciality_per_month()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_new_patients_per_speciality_per_month():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -485,14 +539,8 @@ def plot_new_patients_per_speciality_per_month():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-                'SELECT f_nomEspecialitat, CONCAT(LEFT(f_month,4), "-", f_monthname) as mesnom, f_month, sum(f_newPatients) as total FROM dm2_newpatient_per_month_agenda GROUP BY f_nomEspecialitat, CONCAT(LEFT(f_month,4), "-", f_monthname), f_month'
-            )
-
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Spec', 1: 'MesNom', 2: 'Mes', 3: 'NewPatients'})
+            sql = 'SELECT f_nomEspecialitat as Spec, CONCAT(LEFT(f_month,4), "-", f_monthname) as MesNom, f_month as Mes, sum(f_newPatients) as NewPatients FROM dm2_newpatient_per_month_agenda GROUP BY f_nomEspecialitat, CONCAT(LEFT(f_month,4), "-", f_monthname), f_month'
+            df = pd.read_sql(sql, connection)
             arraySpecs = df['Spec'].unique()
             df = df.set_index('Spec')
             data = list()
@@ -532,35 +580,42 @@ def plot_new_patients_per_speciality_per_month():
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
-def plot_evolution_new_patients_per_spec(p_idEspeciality=None, p_idAgenda=None):
+""" Generates a offline plotly plot with the graph 'New Patients per Speciality or Agenda'.
+    You can choose to call by spec o agenda, but not both. If you set both values Spec is used.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_evolution_new_patients_per_spec(p_id_agenda='100')
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
+def plot_evolution_new_patients_per_spec(p_id_especiality=None, p_id_agenda=None):
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            sql = 'SELECT f_month, CONCAT(LEFT(f_month,4), "-", f_monthname) as mesnom, sum(f_newPatients) as total from dm2_newpatient_per_month_agenda WHERE '
-            if p_idEspeciality is None and p_idAgenda is None:
-                p_idEspeciality=19 # medicina general per defecte
-            if (not p_idEspeciality is None) and p_idEspeciality != "":
-                sql = sql + 'f_idEspecialitat='+str(p_idEspeciality)+' '
+            sql = 'SELECT f_month as Mes, CONCAT(LEFT(f_month,4), "-", f_monthname) as MesNom, sum(f_newPatients) as NewPatients from dm2_newpatient_per_month_agenda WHERE '
+            if p_id_especiality is None and p_id_agenda is None:
+                p_id_especiality = 19# medicina general per defecte
+            if (p_id_especiality is not None) and p_id_especiality != "":
+                sql = sql + 'f_idEspecialitat=' + str(p_id_especiality) + ' '
             else:
-                if (not p_idAgenda is None) and p_idAgenda != "":
-                    sql = sql + 'f_idAgenda=\''+str(p_idAgenda)+'\' '
-            sql = sql + 'GROUP BY f_month, CONCAT(LEFT(f_month,4), "-", f_monthname)'
-            print(sql)
-            cursor.execute(sql)
-
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'NewPatients'})
-            df = df.sort_values(['Mes'], ascending=[1])
-            trace0_new = go.Scatter(x=df['MesNom'],
+                if (p_id_agenda is not None) and p_id_agenda != "":
+                    sql = sql + 'f_idAgenda=\'' + str(p_id_agenda) + '\' '
+            sql = sql + 'GROUP BY f_month, CONCAT(LEFT(f_month,4), "-", f_monthname) '
+            sql = sql + 'ORDER BY f_month ASC'
+            df = pd.read_sql(sql, connection)
+            trace_new_patients = go.Scatter(x=df['MesNom'],
                                 y=df['NewPatients'],
                                 mode='lines+markers',
                                 name='Pacients nous')
@@ -571,17 +626,20 @@ def plot_evolution_new_patients_per_spec(p_idEspeciality=None, p_idAgenda=None):
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['NewPatients'])
-            trace1_new = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia nous pacients')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression_new_patients = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='Tendencia nous pacients')
 
-            graphTitle = 'Evolució del número de pacients nous'
-            if not p_idEspeciality is None:
-                graphTitle = q.get_Spec_Name(p_idEspeciality) + ': '+ graphTitle
-            if not p_idAgenda is None:
-                graphTitle = q.get_Agenda_Name(p_idAgenda) + ': '+ graphTitle
-            data = [trace0_new, trace1_new]
+            graph_title = 'Evolució del número de pacients nous'
+            if p_id_especiality is not None:
+                graph_title = q.get_Spec_Name(p_id_especiality) + ': '+ graph_title
+            if p_id_agenda is not None:
+                graph_title = q.get_Agenda_Name(p_id_agenda) + ': '+ graph_title
+            data = [trace_new_patients, trace_regression_new_patients]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
@@ -605,31 +663,40 @@ def plot_evolution_new_patients_per_spec(p_idEspeciality=None, p_idAgenda=None):
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
-def plot_distribution_new_patients_per_spec(p_firstmonth, p_lastmonth):
+""" Generates a offline plotly plot with the graph 'Distribution of new patients by speciality'.
+
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_distribution_new_patients_per_spec('201801', '201812')
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param p_first_month: starting month of range values in YYYYMM format
+    :param p_last_month: ending month of range values in YYYYMM format
+    :rtype: string
+"""
+def plot_distribution_new_patients_per_spec(p_first_month, p_last_month):
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            cursor.execute(
-                'SELECT f_nomEspecialitat, sum(f_newPatients) as total FROM datawarehouse.dm2_newpatient_per_month_agenda WHERE f_month >= '+str(p_firstmonth)+' and f_month <= '+str(p_lastmonth)+' GROUP BY f_nomEspecialitat'
-            )
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Especialitat', 1: 'NewPatients'})
-            df = df.sort_values(['NewPatients'], ascending=[0])
-            trace0_new = go.Pie(labels=df['Especialitat'], values=df['NewPatients'])
+            sql = 'SELECT f_nomEspecialitat as Spec, sum(f_newPatients) as NewPatients FROM datawarehouse.dm2_newpatient_per_month_agenda WHERE f_month >= '+str(p_first_month)+' and f_month <= '+str(p_last_month)+' GROUP BY f_nomEspecialitat ORDER BY sum(f_newPatients) DESC'
+            print(sql)
+            df = pd.read_sql(sql, connection)
+            trace_new_patients = go.Pie(labels=df['Spec'], values=df['NewPatients'])
 
-            graphTitle = 'Distribució nous pacients per especialitat (Del ' + u.yyyymmToMonthName(p_firstmonth) + ' al ' + u.yyyymmToMonthName(p_lastmonth) + ')'
-            data = [trace0_new]
+            graph_title = 'Distribució nous pacients per especialitat (Del ' + u.yyyymmToMonthName(p_first_month) + ' al ' + u.yyyymmToMonthName(p_last_month) + ')'
+            data = [trace_new_patients]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
@@ -653,41 +720,52 @@ def plot_distribution_new_patients_per_spec(p_firstmonth, p_lastmonth):
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
-def plot_first_blood_per_agenda(p_firstmonth, p_lastmonth, p_idEspeciality=None):
+""" Generates a offline plotly plot with the graph 'New Patients per agenda'.
+    Optionally, you can show by speciallity. If no speciality is set it shows whole data.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_first_blood_per_agenda('201801', '201812')
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param p_first_month: starting month of range values in YYYYMM format
+    :param p_last_month: ending month of range values in YYYYMM format
+    :param p_id_especiality: optional identifier of speciality
+    :rtype: string
+"""
+def plot_first_blood_per_agenda(p_first_month, p_last_month, p_id_especiality=None):
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
                                              database=config.get('DatabaseSection', 'database.dbname'),
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
-            sql = 'SELECT f_nomAgenda, sum(f_totalVisits) as visits, COUNT(*) as patients, sum(f_totalVisits)/COUNT(*) as visits_per_patient FROM datawarehouse.dm_first_visit WHERE f_month between '+str(p_firstmonth)+' and '+str(p_lastmonth)
-            if not p_idEspeciality is None:
-                sql = sql + ' AND f_idEspecialitat='+str(p_idEspeciality)+' '
+            sql = 'SELECT f_nomAgenda as nomAgenda, sum(f_totalVisits) as Total, COUNT(*) as Patients, sum(f_totalVisits)/COUNT(*) as PerPatient FROM datawarehouse.dm_first_visit WHERE f_month between '+str(p_first_month)+' and '+str(p_last_month)
+            if p_id_especiality is not None:
+                sql = sql + ' AND f_idEspecialitat=' + str(p_id_especiality) + ' '
             sql = sql + ' GROUP BY f_nomAgenda'
-            cursor.execute(sql)
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'nomAgenda', 1: 'Total', 2: 'Patients', 3: 'PerPatient'})
-            df = df.sort_values(['Total'], ascending=[0])
-            trace0 = go.Bar(x=df['nomAgenda'],
+            sql = sql + ' ORDER BY sum(f_totalVisits) DESC'
+            df = pd.read_sql(sql, connection)
+            trace_visits = go.Bar(x=df['nomAgenda'],
                                 y=df['Total'],
                                 name='Total visites al centre')
 
-            trace1 = go.Bar(x=df['nomAgenda'],
+            trace_per_patient = go.Bar(x=df['nomAgenda'],
                                 y=df['PerPatient'],
                                 name='Mitjana per pacient')
 
-            graphTitle = 'Visites per captació en agenda (Del ' + u.yyyymmToMonthName(p_firstmonth) + ' al ' + u.yyyymmToMonthName(p_lastmonth) + ')'
-            if not p_idEspeciality is None:
-                graphTitle = q.get_Spec_Name(p_idEspeciality) + ': '+ graphTitle
-            data = [trace0, trace1]
+            graph_title = 'Visites per captació en agenda (Del ' + u.yyyymmToMonthName(p_first_month) + ' al ' + u.yyyymmToMonthName(p_last_month) + ')'
+            if p_id_especiality is not None:
+                graph_title = q.get_Spec_Name(p_id_especiality) + ': ' + graph_title
+            data = [trace_visits, trace_per_patient]
             layout = go.Layout(
-                title=graphTitle,
+                title=graph_title,
                 titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
                 showlegend=True,
                 xaxis=dict(
@@ -710,10 +788,22 @@ def plot_first_blood_per_agenda(p_firstmonth, p_lastmonth, p_idEspeciality=None)
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'Last visits per month'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_last_visits_per_month()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_last_visits_per_month():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -721,41 +811,34 @@ def plot_last_visits_per_month():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            cursor = connection.cursor()
             # we don't want to show future months, so we filter till past month
             now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
             last_month = str(now.year) + str(now.month+1).zfill(2)
-            cursor.execute(
-                'SELECT f_lastmonth, CONCAT(LEFT(f_lastmonth,4), "-", f_lastmonthname) as mesnom, count(*) FROM datawarehouse.dm_first_visit WHERE f_lastmonth < '+ last_month + ' GROUP BY f_lastmonth, CONCAT(LEFT(f_lastmonth,4), "-", f_lastmonthname)'
-            )
-
-            rows = cursor.fetchall()
-            df = pd.DataFrame([[ij for ij in i] for i in rows])
-            df = df.rename(columns={0: 'Mes', 1: 'MesNom', 2: 'Total'})
-            df = df.sort_values(['Mes'], ascending=[1])
-            trace0 = go.Scatter(x=df['MesNom'],
+            sql = 'SELECT f_lastmonth as Mes, CONCAT(LEFT(f_lastmonth,4), "-", f_lastmonthname) as MesNom, count(*) as Total FROM datawarehouse.dm_first_visit WHERE f_lastmonth < '+ last_month + ' GROUP BY f_lastmonth, CONCAT(LEFT(f_lastmonth,4), "-", f_lastmonthname) ORDER BY f_lastmonth ASC'
+            df = pd.read_sql(sql, connection)
+            trace_visits = go.Scatter(x=df['MesNom'],
                                 y=df['Total'],
                                 mode='lines+markers',
                                 name='Ultimes visites per mes')
-            index_start_odonto_omi = list(df['MesNom']).index("2017-Dec")
-            value_start_odonto_omi = df['Total'].get(index_start_odonto_omi)
-
             linear_x = np.r_[0:len(df)]
             linear_x = np.arange(0, len(df)).reshape(-1, 1)
             poly_reg = PolynomialFeatures(degree=4)
             X_poly = poly_reg.fit_transform(linear_x)
             pol_reg = LinearRegression()
             pol_reg.fit(X_poly, df['Total'])
-            trace1 = go.Scatter(x=df['MesNom'],
-                                y=pol_reg.predict(poly_reg.fit_transform(linear_x)), mode='lines',name='Tendencia')
+            predicted_y = pol_reg.predict(poly_reg.fit_transform(linear_x))
+            trace_regression_visits = go.Scatter(x=df['MesNom'],
+                                y=predicted_y,
+                                mode='lines',
+                                name='Tendencia')
 
-            trace2 = go.Scatter(x=["2017-Dec", "2017-Dec"],
+            trace_omi_annotation = go.Scatter(x=["2017-Dec", "2017-Dec"],
                                 y=[0, df['Total'].max()],
                                 mode='lines',
                                 name='Inici odontologia a OMI360',
                                 line=dict(dash='dot'))
 
-            data = [trace0, trace1, trace2]
+            data = [trace_visits, trace_regression_visits, trace_omi_annotation]
             layout = go.Layout(
                 title='Evolució del número de últimes visites per mes',
                 titlefont=dict(family='Arial, sans-serif',
@@ -783,10 +866,22 @@ def plot_last_visits_per_month():
     finally:
         # closing database connection.
         if (connection.is_connected()):
-            cursor.close()
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'Visits per patient'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_visits_per_patient()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_visits_per_patient():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -794,13 +889,12 @@ def plot_visits_per_patient():
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            df = pd.read_sql ('SELECT f_numHistoria as Patient, f_totalVisits as Total FROM datawarehouse.dm_first_visit', connection)
-            df[df['Total']>50] = 50
-            trace0 = go.Histogram(x=df['Total'],
+            df = pd.read_sql('SELECT f_numHistoria as Patient, f_totalVisits as Total FROM datawarehouse.dm_first_visit', connection)
+            #max outliners to 50 for better visualization
+            df[df['Total'] > 50] = 50
+            trace_visits = go.Histogram(x=df['Total'],
                                 name='Visites per pacient')
-
-
-            data = [trace0]
+            data = [trace_visits]
             layout = go.Layout(
                 title='Distribució del número de visites per pacient',
                 titlefont=dict(family='Arial, sans-serif',
@@ -812,7 +906,7 @@ def plot_visits_per_patient():
                                          size=14,
                                          color='black'),
                            showexponent='none',
-                           title='Vistes'),
+                           title='Visites'),
                 yaxis=dict(showticklabels=True,
                             title='Número de pacients',
                             tickformat='.0f',
@@ -831,6 +925,19 @@ def plot_visits_per_patient():
             connection.close()
 
 
+""" Generates a offline plotly plot with the graph 'Distribution casual vs fidelizied'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_distribution_casual_vs_fidelizied()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
 def plot_distribution_casual_vs_fidelizied():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -908,6 +1015,63 @@ def plot_distribution_casual_vs_fidelizied():
             fig = go.Figure(data=data, layout=layout)
             plotdiv_visits = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
             return plotdiv_patients, plotdiv_visits
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            connection.close()
+
+
+""" Generates a offline plotly plot with the graph 'Distance to last visit'.
+    Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
+    in your html file.
+
+    usage::
+
+        >>> import plots
+        >>> plot = plot_distance_to_lastmonth()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot})
+
+    :param: None
+    :rtype: string
+"""
+def plot_distance_to_lastmonth():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            df = pd.read_sql('SELECT f_numHistoria as Patient, PERIOD_DIFF(IF(f_lastmonth=f_month,EXTRACT(YEAR_MONTH FROM CURRENT_DATE()),f_lastmonth), f_month) as mesos FROM datawarehouse.dm_first_visit', connection)
+
+            df = df[df['mesos']>0]
+            trace_distance = go.Histogram(x=df['mesos'],
+                                name='Mesos des de última visita')
+
+            data = [trace_distance]
+            layout = go.Layout(
+                title='Conteig dels mesos que fa que no ve cada pacient',
+                titlefont=dict(family='Arial, sans-serif',
+                               size=24,
+                               color='green'),
+                xaxis=dict(showticklabels=True,
+                           tickangle=45,
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none',
+                           title='Mesos des de última visita'),
+                yaxis=dict(showticklabels=True,
+                            title='Número de pacients',
+                            tickformat='.0f',
+                           tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                           showexponent='none'))
+            fig = go.Figure(data=data, layout=layout)
+            return py.offline.plot(fig, include_plotlyjs=False, output_type='div')
 
     except Error as e:
         print("Error while connecting to MySQL", e)

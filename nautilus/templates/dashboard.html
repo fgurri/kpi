@@ -47,14 +47,6 @@
                         <td>Pacients 2018:</td>
                         <td>{{v_patients_last_year}}</td>
                     </tr>
-                    <tr>
-                        <td>Pacients nous 2019:</td>
-                        <td>{{v_new_patients_current_year}}</td>
-                    </tr>
-                    <tr>
-                        <td>Pacients nous 2018:</td>
-                        <td>{{v_new_patients_last_year}}</td>
-                    </tr>
                 </tbody>
                 </table>
 
@@ -150,6 +142,35 @@
                 </div>
                 <div class="panel-body">
                     {{plot_distribution_new_patients_per_spec|safe}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    KPI_10: Agendes
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped table-hover table-dataTable">
+                        <thead>
+                            <th class="text-center">Agenda</th>
+                            <th class="text-center">Visites {{v_last_month}}</th>
+                            <th class="text-center">Visites {{v_last_month_last_year}}</th>
+                            <th class="text-center">Variació</th>
+                        </thead>
+                    <tbody>
+                        {% for agenda in kpi_agendes %}
+                            <tr>
+                                <td class="text-center">{{agenda.name}}</td>
+                                <td class="text-center">{{agenda.visites}}</td>
+                                <td class="text-center">{{agenda.visitesUltimAny}}</td>
+                                <td class="text-center">{{agenda.inc}}%</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
                 </div>
             </div>
         </div>

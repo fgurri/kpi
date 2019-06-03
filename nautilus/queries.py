@@ -1,12 +1,24 @@
+import configparser
+
 import mysql.connector
 from mysql.connector import Error
-import configparser
 
 # read properties on project root
 config = configparser.RawConfigParser()
 config.read(r'nautilus.properties')
 
+""" Generates an array of all specialities
 
+    usage::
+
+        >>> import queries
+        >>> spec_array = get_Specialities()
+        >>> for spec in spec_array:
+        >>>     print(spec.id + ': ' + spec.name)
+
+    :param:
+    :rtype: array of tuples {'id': id, 'name': name}
+"""
 def get_Specialities():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -36,6 +48,18 @@ def get_Specialities():
             connection.close()
 
 
+""" Generates an array of all agendas
+
+    usage::
+
+        >>> import queries
+        >>> spec_array = get_Agendas()
+        >>> for agenda in agenda_array:
+        >>>     print(agenda.id + ': ' + agenda.name)
+
+    :param:
+    :rtype: array of tuples {'id': id, 'name': name}
+"""
 def get_Agendas():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -65,6 +89,20 @@ def get_Agendas():
             connection.close()
 
 
+""" Generates an array of all months in table dm2_newpatient_per_month_agenda.
+    Months id are in format YYYYMM and the name is YYYY concat with the first
+    three character of english month name. For example: 2018-Jan
+
+    usage::
+
+        >>> import queries
+        >>> month_array = get_Months()
+        >>> for month in month_array:
+        >>>     print(month.id + ': ' + month.name)
+
+    :param:
+    :rtype: array of tuples {'id': id, 'name': name}
+"""
 def get_Months():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -94,6 +132,19 @@ def get_Months():
             connection.close()
 
 
+""" Generates a list of all months in table dm2_newpatient_per_month_agenda.
+    Months are in format YYYYMM.
+
+    usage::
+
+        >>> import queries
+        >>> month_list = get_month_list()
+        >>> for month in month_list:
+        >>>     print(month)
+
+    :param:
+    :rtype: list of YYYYMM months
+"""
 def get_month_list():
     try:
         connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
@@ -117,6 +168,17 @@ def get_month_list():
             connection.close()
 
 
+""" Retrieves the speciality name from table dm_especialitats
+
+    usage::
+
+        >>> import queries
+        >>> spec_name = get_Spec_Name(19)
+        >>> print(spec_name)
+
+    :param:
+    :rtype: string
+"""
 def get_Spec_Name(p_idSpec):
     try:
         res = ''
@@ -141,6 +203,17 @@ def get_Spec_Name(p_idSpec):
             connection.close()
 
 
+""" Retrieves the agenda name from table dm_especialitat_agenda
+
+    usage::
+
+        >>> import queries
+        >>> agenda_name = get_Agenda_Name('19')
+        >>> print(agenda_name)
+
+    :param:
+    :rtype: string
+"""
 def get_Agenda_Name(p_idAgenda):
     try:
         res = ''
@@ -155,6 +228,142 @@ def get_Agenda_Name(p_idAgenda):
             for result in rows:
                 res = result[0]
             return res
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+""" Generates an array of all years in table dm2_stats_per_month in format YYYY.
+
+    usage::
+
+        >>> import queries
+        >>> year_array = get_Years()
+        >>> for year in year_array:
+        >>>     print(year.year)
+
+    :param:
+    :rtype: array of tuples {'year': year}
+"""
+def get_Years():
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(
+                'SELECT distinct LEFT(f_month, 4) from dm2_stats_per_month ORDER BY LEFT(f_month, 4) ASC'
+            )
+            rows = cursor.fetchall()
+            lines = []
+            line = {}
+            for result in rows:
+                line = {'year': result[0]}
+                lines.append(line)
+                line = {}
+            return lines
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+""" Counts the number of visits and diferent patients in a time range.
+    Can be uses with no range to calculate totals
+
+    usage::
+
+        >>> import queries
+        >>> #whole 2018
+        >>> visits, patients = get_Visits(2018)
+        >>> #2018 till march
+        >>> visits, patients = get_Visits(2018, 201803)
+        >>> #whole stats
+        >>> visits, patients = get_Visits()
+
+
+    :param:
+    :rtype: tuple visits,patients
+"""
+def get_Visits(p_year=None, p_lastmonth=None):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            sql = 'SELECT COUNT(*) as visites, COUNT(distinct numHistoria) as pacients FROM bi_visites'
+            if p_year is not None:
+                if p_lastmonth is None:
+                    sql = sql + ' WHERE LEFT(dataProgramacio, 4) = \'' + p_year + '\''
+                else:
+                    sql = sql + ' WHERE LEFT(dataProgramacio, 4) = \'' + p_year + '\' AND REPLACE(LEFT(dataProgramacio,7),"-","") <= \'' + p_lastmonth + '\''
+
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            return rows[0][0], rows[0][1]
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+""" For each agenda in dm1_visits_per_agenda, counts the number of visits of
+    given month (format YYYYMM), visits of the same month of last year and
+    interanual variation in %.
+
+    usage::
+
+        >>> import queries
+        >>> agendas_array = get_KPI_Agendas(201904)
+        >>> for agenda in agendas_array:
+        >>>     print(agenda.name + ': ' + agenda.inc + '%')
+
+
+    :param:
+    :rtype: array of tuples {'name': name, 'visites': visits, 'visitesUltimAny': visits12monthsago, 'inc': interanual_inc}
+"""
+def get_KPI_Agendas(p_lastmonth):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            sql = 'select va.f_nomAgenda, va.f_count, (select va2.f_count from dm1_visits_per_agenda va2 where va2.f_idAgenda = va.f_idAgenda and va2.f_monthname=va.f_monthname and va2.f_year = (va.f_year-1)) as f_count_lastYear from dm1_visits_per_agenda va where va.f_month=' + p_lastmonth
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            lines = []
+            line = {}
+            for result in rows:
+                inc = 0
+                visitesUltimAny = result[2]
+                if result[2] is None:
+                    visitesUltimAny = 0
+                if not result[1] is None and visitesUltimAny != 0:
+                    inc = int(round(100*result[1] / visitesUltimAny - 100.00, 2))
+                line = {'name': result[0], 'visites': result[1], 'visitesUltimAny': visitesUltimAny, 'inc': inc}
+                lines.append(line)
+                line = {}
+            return lines
 
     except Error as e:
         print("Error while connecting to MySQL", e)

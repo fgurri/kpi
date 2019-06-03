@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>load_patients_per_month</name>
+    <name>load_dm_dm2</name>
     <description />
     <extended_description />
     <trans_version />

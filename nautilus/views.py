@@ -3,22 +3,32 @@ import nautilus.queries as q
 from django.shortcuts import render
 import datetime
 import dateutil.relativedelta
+import nautilus.utils as u
 
 
 def dashboard(request):
+    # gest last month in YYYYMM format
+    currYear = datetime.datetime.now().year
+    lastYear = currYear - 1
     now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
     last_month = str(now.year) + str(now.month).zfill(2)
-    return render(request, 'dashboard.html', {'v_visits_total' : 1580502,
-        'v_visits_current_year': 73642,
-        'v_visits_last_year': 67059,
-        'v_patients_total': 100879,
-        'v_patients_current_year': 18757,
-        'v_patients_last_year': 17396,
-        'v_new_patients_current_year': 2227,
-        'v_new_patients_last_year': 2360,
-        'v_fidelity_total': 15.67,
-        'v_fidelity_current_year': 3.93,
-        'v_fidelity_last_year': 3.85,
+    last_month_last_year = str(now.year-1) + str(now.month).zfill(2)
+    vis, pat = q.get_Visits(str(currYear), str(last_month))
+    last_vis, last_pat = q.get_Visits(str(lastYear), str(lastYear)+last_month[-2:])
+    total_vis, total_pat = q.get_Visits()
+    return render(request, 'dashboard.html', {
+        'v_last_month': u.yyyymmToMonthName(last_month),
+        'v_last_month_last_year': u.yyyymmToMonthName(last_month_last_year),
+        'v_visits_total' : total_vis,
+        'v_visits_current_year': vis,
+        'v_visits_last_year': last_vis,
+        'v_patients_total': total_pat,
+        'v_patients_current_year': pat,
+        'v_patients_last_year': last_pat,
+        'v_fidelity_total': round(total_vis/total_pat, 2),
+        'v_fidelity_current_year': round(vis/pat, 2),
+        'v_fidelity_last_year': round(last_vis/last_pat, 2),
+        'kpi_agendes': q.get_KPI_Agendas(last_month),
         'plot_rep_med_gen': p.plot_frequency_per_agenda('AG100'),
         'plot_rep_endos': p.plot_frequency_per_agenda('AG45'),
         'plot_patients': p.plot_patients_per_month(),
@@ -47,6 +57,12 @@ def plot_casual_vs_fidelizied(request):
                                                         'plotdiv_visits': plotdiv_visits})
 
 
+def plot_distance_to_lastmonth(request):
+    footer = '<p></p>'
+    return render(request, 'plot.html', {'plotdiv': p.plot_distance_to_lastmonth(),
+                                        'footer': footer,
+                                        'heading': 'Fidelització > Conteig mesos des de última visita'})
+
 
 def plot_last_visits_per_month(request):
     footer = '<p>Número de últimes visites al centre agrupat per mes.</p>'
@@ -58,7 +74,7 @@ def plot_last_visits_per_month(request):
 
     return render(request, 'plot.html', {'plotdiv': p.plot_last_visits_per_month(),
                                         'footer': footer ,
-                                        'heading': 'Fidelització > Fuga de pacients'})
+                                        'heading': 'Fidelització > Conteig últimes visites'})
 
 
 def plot_visits_per_month_speciality(request):
@@ -69,7 +85,7 @@ def plot_visits_per_month_speciality(request):
     return render(request, 'visitsPerMonthSpeciality.html',
         {'listSpecialities': q.get_Specialities(),
         'id_speciality': id_speciality,
-        'plotdiv': p.plot_visits_per_month_speciality(p_idEspeciality=id_speciality)})
+        'plotdiv': p.plot_visits_per_month_speciality(p_id_especiality=id_speciality)})
 
 
 def plot_visits_per_month_agenda(request):
@@ -79,7 +95,7 @@ def plot_visits_per_month_agenda(request):
     return render(request, 'visitsPerMonthAgenda.html',
         {'listAgendas': q.get_Agendas(),
         'id_agenda': id_agenda,
-        'plotdiv': p.plot_visits_per_month_speciality(p_idAgenda=id_agenda)})
+        'plotdiv': p.plot_visits_per_month_speciality(p_id_agenda=id_agenda)})
 
 
 def plot_visits_per_speciality(request):
@@ -99,6 +115,8 @@ def plot_visits_per_speciality(request):
 def plot_new_patients_per_speciality(request):
     monthini = request.POST.get('monthini')
     monthfinal = request.POST.get('monthfinal')
+    currYear = datetime.datetime.now().year
+
     if monthini is None or monthini == '' or monthfinal is None or monthfinal == ''or int(monthini) > int(monthfinal):
         now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
         last_month = str(now.year) + str(now.month).zfill(2)
@@ -108,7 +126,9 @@ def plot_new_patients_per_speciality(request):
     return render(request, 'newPatientsSpeciality.html', {'plotdiv': p.plot_distribution_new_patients_per_spec(monthini, monthfinal),
                                                             'monthini': monthini,
                                                             'monthfinal': monthfinal,
-                                                            'listMonths': q.get_Months()})
+                                                            'listMonths': q.get_Months(),
+                                                            'listYears': q.get_Years(),
+                                                            'currYear': str(currYear)})
 
 
 def plot_new_patients_evolution_per_speciality(request):
@@ -118,7 +138,7 @@ def plot_new_patients_evolution_per_speciality(request):
 
     return render(request, 'newPatientsEvolutionSpeciality.html', {'listSpecialities': q.get_Specialities(),
         'id_speciality': id_speciality,
-        'plotdiv': p.plot_evolution_new_patients_per_spec(p_idEspeciality=id_speciality)})
+        'plotdiv': p.plot_evolution_new_patients_per_spec(p_id_especiality=id_speciality)})
 
 
 def plot_new_patients_per_speciality_slider(request):
@@ -153,7 +173,9 @@ def plot_new_patients_per_speciality_per_month(request):
 def plot_first_blood_per_agenda(request):
     monthini = request.POST.get('monthini')
     monthfinal = request.POST.get('monthfinal')
+    currYear = datetime.datetime.now().year
 
+    #check errors or missing values and set a default range
     if monthini is None or monthini == '' or monthfinal is None or monthfinal == ''or int(monthini) > int(monthfinal):
         now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
         last_month = str(now.year) + str(now.month).zfill(2)
@@ -163,7 +185,9 @@ def plot_first_blood_per_agenda(request):
     return render(request, 'firstBloodPerAgenda.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal),
                                                             'monthini': monthini,
                                                             'monthfinal': monthfinal,
-                                                            'listMonths': q.get_Months()})
+                                                            'listMonths': q.get_Months(),
+                                                            'listYears': q.get_Years(),
+                                                            'currYear': str(currYear)})
 
 
 def plot_first_blood_per_agenda_by_spec(request):
@@ -173,18 +197,22 @@ def plot_first_blood_per_agenda_by_spec(request):
     if id_speciality is None:
         id_speciality = '19'
 
+    currYear = datetime.datetime.now().year
+
     if monthini is None or monthini == '' or monthfinal is None or monthfinal == ''or int(monthini) > int(monthfinal):
         now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
         last_month = str(now.year) + str(now.month).zfill(2)
         monthini = last_month
         monthfinal = last_month
 
-    return render(request, 'firstBloodPerAgendaBySpec.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal, p_idEspeciality=id_speciality),
+    return render(request, 'firstBloodPerAgendaBySpec.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal, p_id_especiality=id_speciality),
                                                             'monthini': monthini,
                                                             'monthfinal': monthfinal,
                                                             'listMonths': q.get_Months(),
                                                             'listSpecialities': q.get_Specialities(),
-                                                            'id_speciality': id_speciality})
+                                                            'id_speciality': id_speciality,
+                                                            'listYears': q.get_Years(),
+                                                            'currYear': str(currYear)})
 
 
 def plot_month_frequency_by_agenda(request):

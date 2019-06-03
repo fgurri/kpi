@@ -9,28 +9,6 @@
             $("#rangevalues").val ("'" + $("#ex25").slider("getValue") + "'");
         });
     });
-
-    function showYear (year) {
-        document.getElementById("monthini").value = year+"01";
-        document.getElementById("monthfinal").value = year+"12";
-    }
-
-    function currentYear() {
-        var d = new Date();
-        var monthini = new Date(d.getFullYear(), 0, 1);
-        var monthfinal = new Date(d.getFullYear(), d.getMonth()-1, 1);
-        document.getElementById("monthini").value = monthini.getFullYear() + ("0" + (monthini.getMonth()+1)).slice(-2);
-        document.getElementById("monthfinal").value = monthfinal.getFullYear() + ("0" + (monthfinal.getMonth()+1)).slice(-2);
-    }
-
-    function last12months () {
-        var d = new Date();
-        var monthini = new Date(d.getFullYear()-1, d.getMonth(), 1);
-        var monthfinal = new Date(d.getFullYear(), d.getMonth()-1, 1);
-        document.getElementById("monthini").value = monthini.getFullYear() + ("0" + (monthini.getMonth()+1)).slice(-2);
-        document.getElementById("monthfinal").value = monthfinal.getFullYear() + ("0" + (monthfinal.getMonth()+1)).slice(-2);
-    }
-
     </script>
 {% endblock %}
 {% block content %}
@@ -80,14 +58,14 @@
                             <div class="form-row">
                                 <div class="form-group col-md-12">
                                     <label for="monthfinal">Accessos directes:</label>
-                                    <button class="btn" onclick="javascript:showYear('2013')">2013</button>
-                                    <button class="btn" onclick="javascript:showYear('2014')">2014</button>
-                                    <button class="btn" onclick="javascript:showYear('2015')">2015</button>
-                                    <button class="btn" onclick="javascript:showYear('2016')">2016</button>
-                                    <button class="btn" onclick="javascript:showYear('2017')">2017</button>
-                                    <button class="btn" onclick="javascript:showYear('2018')">2018</button>
-                                    <button class="btn" onclick="javascript:currentYear()">2019</button>
-                                    <button class="btn" onclick="javascript:last12months()">Ultims 12 mesos</button>
+                                    <button class="btn" onclick="javascript:showYear('monthini','monthfinal','2013')">2013</button>
+                                    <button class="btn" onclick="javascript:showYear('monthini','monthfinal','2014')">2014</button>
+                                    <button class="btn" onclick="javascript:showYear('monthini','monthfinal','2015')">2015</button>
+                                    <button class="btn" onclick="javascript:showYear('monthini','monthfinal','2016')">2016</button>
+                                    <button class="btn" onclick="javascript:showYear('monthini','monthfinal','2017')">2017</button>
+                                    <button class="btn" onclick="javascript:showYear('monthini','monthfinal','2018')">2018</button>
+                                    <button class="btn" onclick="javascript:currentYear('monthini','monthfinal')">2019</button>
+                                    <button class="btn" onclick="javascript:last12months('monthini','monthfinal')">Ultims 12 mesos</button>
                                 </div>
                             </div>
                         </form>

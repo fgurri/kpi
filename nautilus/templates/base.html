@@ -7,31 +7,24 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/bootstrap-slider.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/nautilus.css' %}">
+    <link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
     <script src="{% static 'js/jquery-1.11.1.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
     <script src="{% static 'js/plotly-latest.min.js' %}"></script>
     <script src="{% static 'js/bootstrap-slider.min.js' %}"></script>
+    <script src="{% static 'js/custom.jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/binomi-utils.js' %}"></script>
     {% block scripts %}{% endblock %}
 </head>
 <body>
     <div class="container" id="page-wrapper">
-        <nav class="navbar navbar-light navbar-static-top menu-principal" id="menu">
+        <nav class="navbar navbar-light menu-principal" id="menu">
           <div class="container-fluid">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" href="dashboard"><img height="25" src="{% static 'img/logoCreuGroga.jpg' %}"/></a>
-            </div>
+            <a class="navbar-brand" href="dashboard"><img height="40" src="{% static 'images/grogaSubmarine.png' %}"/></a>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse">
               <ul class="nav navbar-nav">
-                <li><a href="dashboard"><span class="fas fa-chart-area">&nbsp;KPIs</span></a></li>
+                <li ><a href="dashboard"><span class="fas fa-chart-area">&nbsp;KPIs</span></a></li>
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="fas fa-chart-area">&nbsp;Visites</span><span class="caret"></span></a>
                   <ul class="dropdown-menu">
@@ -58,15 +51,23 @@
                     <li><a href="lvpm"><span class="fas fa-chart-area">&nbsp;Conteig últimes visites</span></a></li>
                     <li><a href="vpp"><span class="fas fa-chart-area">&nbsp;Distribució número de visites per pacient</span></a></li>
                     <li><a href="pcpf"><span class="fas fa-chart-area">&nbsp;Distribució de pacients casuals vs fidelitzats</span></a></li>
+                    <li><a href="dtlv"><span class="fas fa-chart-area">&nbsp;Conteig mesos des de última visita</span></a></li>
                   </ul>
                 </li>
               </ul>
-            </div><!-- /.navbar-collapse -->
+
           </div><!-- /.container-fluid -->
         </nav>
         <div id="content">
             {% block content %}{% endblock %}
         </div>
     </div>
+    <script th:inline="none">
+      $(document).ready(function() {
+        $('.table-dataTable').DataTable({
+          order : [ [ 0, "asc" ] ]
+        });
+      });
+  </script>
 </body>
 </html>
