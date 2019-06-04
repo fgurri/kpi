@@ -3,6 +3,8 @@ import configparser
 import mysql.connector
 from mysql.connector import Error
 
+import nautilus.utils as u
+
 # read properties on project root
 config = configparser.RawConfigParser()
 config.read(r'nautilus.properties')
@@ -58,7 +60,7 @@ def get_Specialities():
         >>>     print(agenda.id + ': ' + agenda.name)
 
     :param:
-    :rtype: array of tuples {'id': id, 'name': name}
+    :rtype: array of tuples {'id': id, 'name': name, 'spec_id': spec_id, 'spec_name': spec_name}
 """
 def get_Agendas():
     try:
@@ -69,13 +71,18 @@ def get_Agendas():
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute(
-                'SELECT f_idAgenda, f_nomAgenda FROM datawarehouse.dm_especialitat_agenda ORDER BY f_nomAgenda ASC'
+                'SELECT ea.f_idAgenda, ea.f_nomAgenda, ea.f_idEspecialitat, e.f_nomEspecialitat FROM datawarehouse.dm_especialitat_agenda ea LEFT OUTER JOIN dm_especialitats e ON e.f_idEspecialitat = ea.f_idEspecialitat ORDER BY f_nomAgenda ASC'
             )
             rows = cursor.fetchall()
             lines = []
             line = {}
             for result in rows:
-                line = {'id': result[0], 'name': result[1]}
+                spec_name = result[3]
+                spec_id = result[2]
+                if spec_name is None:
+                    spec_name = ''
+                    spec_id = ''
+                line = {'id': result[0], 'name': result[1], 'spec_id': spec_id, 'spec_name': spec_name}
                 lines.append(line)
                 line = {}
             return lines
@@ -188,7 +195,7 @@ def get_Spec_Name(p_idSpec):
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
             cursor = connection.cursor()
-            cursor.execute('select f_nomEspecialitat from dm_especialitats where f_idEspecialitat = ' + p_idSpec)
+            cursor.execute('select f_nomEspecialitat from dm_especialitats where f_idEspecialitat = ' + str(p_idSpec))
             rows = cursor.fetchall()
             for result in rows:
                 res = result[0]
@@ -327,7 +334,7 @@ def get_Visits(p_year=None, p_lastmonth=None):
 
 """ For each agenda in dm1_visits_per_agenda, counts the number of visits of
     given month (format YYYYMM), visits of the same month of last year and
-    interanual variation in %.
+    interanual variation in %. Comparative to previous month is also given.
 
     usage::
 
@@ -338,7 +345,7 @@ def get_Visits(p_year=None, p_lastmonth=None):
 
 
     :param:
-    :rtype: array of tuples {'name': name, 'visites': visits, 'visitesUltimAny': visits12monthsago, 'inc': interanual_inc}
+    :rtype: array of tuples {'name': name, 'visites': visits, 'visitesUltimAny': visits12monthsago, 'inc': interanual_inc, 'visites_mes_anterior': visites_mes_anterior, 'inc_mensual': inc_mensual}
 """
 def get_KPI_Agendas(p_lastmonth):
     try:
@@ -348,19 +355,75 @@ def get_KPI_Agendas(p_lastmonth):
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
             cursor = connection.cursor()
-            sql = 'select va.f_nomAgenda, va.f_count, (select va2.f_count from dm1_visits_per_agenda va2 where va2.f_idAgenda = va.f_idAgenda and va2.f_monthname=va.f_monthname and va2.f_year = (va.f_year-1)) as f_count_lastYear from dm1_visits_per_agenda va where va.f_month=' + p_lastmonth
+            previous_month = u.yyyymm_add_months(p_lastmonth, -1)
+            sql = 'select va.f_nomAgenda, va.f_count, (select va3.f_count from dm1_visits_per_agenda va3 where va3.f_idAgenda = va.f_idAgenda and va3.f_month='+previous_month+') as f_count_previousMonth, (select va2.f_count from dm1_visits_per_agenda va2 where va2.f_idAgenda = va.f_idAgenda and va2.f_monthname=va.f_monthname and va2.f_year = (va.f_year-1)) as f_count_lastYear from dm1_visits_per_agenda va where va.f_month='+ p_lastmonth
             cursor.execute(sql)
             rows = cursor.fetchall()
             lines = []
             line = {}
             for result in rows:
+                #calc interanual increment
                 inc = 0
-                visitesUltimAny = result[2]
-                if result[2] is None:
+                visitesUltimAny = result[3]
+                if result[3] is None:
                     visitesUltimAny = 0
                 if not result[1] is None and visitesUltimAny != 0:
                     inc = int(round(100*result[1] / visitesUltimAny - 100.00, 2))
-                line = {'name': result[0], 'visites': result[1], 'visitesUltimAny': visitesUltimAny, 'inc': inc}
+                #calc previous month increment
+                inc_mensual = 0
+                visites_mes_anterior = result[2]
+                if result[2] is None:
+                    visites_mes_anterior = 0
+                if not result[1] is None and visites_mes_anterior != 0:
+                    inc_mensual = int(round(100*result[1] / visites_mes_anterior - 100.00, 2))
+
+                line = {'name': result[0],
+                        'visites': result[1],
+                        'visitesUltimAny': visitesUltimAny,
+                        'inc': inc,
+                        'visites_mes_anterior': visites_mes_anterior,
+                        'inc_mensual': inc_mensual}
+                lines.append(line)
+                line = {}
+            return lines
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
+            cursor.close()
+            connection.close()
+
+
+""" Get the last number of load log lines.
+
+    usage::
+
+        >>> import queries
+        >>> load_array = get_last_loads(5)
+        >>> for load in load_array:
+        >>>     print(load.load_date + ': ' + load.result + '%')
+
+
+    :param:
+    :rtype: array of tuples {'load_date': load_date, 'result': result}
+"""
+def get_last_loads(p_num_loads):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            sql = 'SELECT f_date as load_date, f_result as result FROM dm_load_log ORDER BY f_date DESC LIMIT ' + str(p_num_loads)
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            lines = []
+            line = {}
+            for result in rows:
+                line = {'load_date': result[0], 'result': result[1]}
                 lines.append(line)
                 line = {}
             return lines

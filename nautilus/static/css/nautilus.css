@@ -12,3 +12,21 @@
    margin-bottom: 0px;
    padding-bottom: 0px;
 }
+.inc_positive {
+    font-weight: bold;
+    color: green;
+}
+
+.inc_negative {
+    font-weight: bold;
+    color: red;
+}
+
+.log_ok {
+    font-weight: bold;
+    color: green;
+}
+.log_error  {
+    font-weight: bold;
+    color: red;
+}

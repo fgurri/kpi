@@ -65,3 +65,9 @@ CREATE TABLE `dm_first_visit` (
   `f_agendesDiferents` int(11) DEFAULT NULL,
   PRIMARY KEY (`f_numHistoria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `dm_load_log` (
+  `f_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `f_result` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`f_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

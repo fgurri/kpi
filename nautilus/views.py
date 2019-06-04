@@ -6,6 +6,11 @@ import dateutil.relativedelta
 import nautilus.utils as u
 
 
+def info(request):
+    return render(request, 'panelInfo.html', {'load_array': q.get_last_loads(5),
+                                            'agendas_list': q.get_Agendas()})
+
+
 def dashboard(request):
     # gest last month in YYYYMM format
     currYear = datetime.datetime.now().year
@@ -19,6 +24,7 @@ def dashboard(request):
     return render(request, 'dashboard.html', {
         'v_last_month': u.yyyymmToMonthName(last_month),
         'v_last_month_last_year': u.yyyymmToMonthName(last_month_last_year),
+        'v_previous_month': u.yyyymmToMonthName(u.yyyymm_add_months(last_month, -1)),
         'v_visits_total' : total_vis,
         'v_visits_current_year': vis,
         'v_visits_last_year': last_vis,

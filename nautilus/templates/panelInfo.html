@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        Origen i extracció de dades
+    </div>
+    <div class="panel-body">
+        <p>
+            Les dades provenen de la base de dades original del programari Tesis, a la qual accedim a través dels web services proporcionats per l'empresa Sisinf.
+        </p>
+        <p>
+            Tenim accés a les taules de pacients, visites i informació mèdica.
+        </p>
+        <p>
+            Cada dia a la hora programada (23:00h aproximadament) es llença una càrrega total que buida i tornar a volcar les dades a les taules del data warehouse.
+        </p>
+    </div>
+</div>
+<div class="panel panel-info">
+    <div class="panel-heading">
+        Composició de les dades i decisions de disseny
+    </div>
+    <div class="panel-body">
+        <p>
+            S'ha establert la mesura mínima de analisis al mes. Les dades es guarden i es mostren agrupades en el seu mes segons la data de programació de la visita. No es diferencia entre visites realitzades, programades o anulades. El primer dia de mes el procés de càrrega de dades generarà els valors nous pel mes recent acabat.
+        </p>
+        <p>
+            Per evitar desviacions en les dades s'ha decidit no tractar els valors dels primers mesos de funcionament del programa Tesis, concretament fins al Gener del 2013.
+            Els motius principals per descartar les dades dels primers mesos de programa són:
+            <ul>
+                <li>Hi havia agendes que encara no registraven les visites (fisioterapia) o ho feien de forma incomplerta</li>
+                <li>Tots els pacients es registraven com a nous pacients al centre i invalidava les estadístiques relacionades amb la captació</li>
+                <li>Relacionat amb el punt anterior, en el càlcul de visites generades per captació en agenda es produien desviacions significatives quan les nous pacients es repartien de forma no real entre les agendes que l'atenien per primer cop a Tesis però ja eren clients fidelitzats anteriorment</li>
+            </ul>
+        </p>
+        <p>
+            Els noms d'agenda es recullen del Tesis, però les especialitats es carreguen manualment a partir d'un arxiu extern perquè aquesta informació no arriba en el web service.
+        </p>
+        <p>
+            Quan hi ha canvis de nom en una agenda s'agafa el nom més recent per totes les visites del històric.
+        </p>
+        <p>
+            En les agendes que es van canviar de sala d'espera i, per tant, es van sustituir per agendes noves, manualment s'agrupen totes les visites en l'agenda nova per tal de que es puguin analitzar conjuntament.
+        </p>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        Agendes carregades
+    </div>
+    <div class="panel-body">
+        <table class="table table-hover table-dataTable">
+            <thead>
+                <th class="text-center">Agenda id</th>
+                <th class="text-center">Agenda nom</th>
+                <th class="text-center">Especialitat id</th>
+                <th class="text-center">Especialitat nom</th>
+            </thead>
+            <tbody>
+                {% for agenda in agendas_list %}
+                    <tr>
+                        <td class="text-center">{{agenda.id}}</td>
+                        <td class="text-center">{{agenda.name}}</td>
+                        <td class="text-center">{{agenda.spec_id}}</td>
+                        <td class="text-center">{{agenda.spec_name}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        Logs de càrrega de dades
+    </div>
+    <div class="panel-body">
+        <table class="table table-responsive table-hover">
+            <thead>
+                <th>Dia</th>
+                <th>Resultat</th>
+            </thead>
+            <tbody>
+                {% for log_entry in load_array %}
+                    {% if log_entry.result == "OK" %}
+                        <tr><td>{{log_entry.load_date}}</td><td><span class="log_ok">{{log_entry.result}}</span></td></tr>
+                    {% else %}
+                        <tr><td>{{log_entry.load_date}}</td><td><span class="log_error">{{log_entry.result}}</span></td></tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

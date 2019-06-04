@@ -11,6 +11,61 @@
   <modified_date>2019/05/30 08:57:11.096</modified_date>
   <parameters>
     </parameters>
+  <connection>
+    <name>datawarehouse_localhost</name>
+    <server>localhost</server>
+    <type>MYSQL</type>
+    <access>Native</access>
+    <database>datawarehouse</database>
+    <port>3306</port>
+    <username>datawarehouse</username>
+    <password>Encrypted 2be98afc86ad09396ae11a165cd97ff82</password>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
+    <attributes>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>PORT_NUMBER</code>
+        <attribute>3306</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>STREAM_RESULTS</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>N</attribute>
+      </attribute>
+    </attributes>
+  </connection>
   <slaveservers>
     </slaveservers>
   <job-log-table>
@@ -421,7 +476,7 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>1024</xloc>
+      <xloc>896</xloc>
       <yloc>272</yloc>
     </entry>
     <entry>
@@ -507,8 +562,40 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>896</xloc>
+      <xloc>1008</xloc>
       <yloc>272</yloc>
+    </entry>
+    <entry>
+      <name>LOG OK</name>
+      <description />
+      <type>SQL</type>
+      <sql>INSERT INTO dm_load_log (f_date, f_result) VALUE (CURRENT_TIMESTAMP(), 'OK')</sql>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>F</sqlfromfile>
+      <sqlfilename />
+      <sendOneStatement>F</sendOneStatement>
+      <connection>datawarehouse_localhost</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>1120</xloc>
+      <yloc>272</yloc>
+    </entry>
+    <entry>
+      <name>LOG ERROR</name>
+      <description />
+      <type>SQL</type>
+      <sql>INSERT INTO dm_load_log (f_date, f_result) VALUE (CURRENT_TIMESTAMP(), 'ERROR')</sql>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>F</sqlfromfile>
+      <sqlfilename />
+      <sendOneStatement>F</sendOneStatement>
+      <connection>datawarehouse_localhost</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>768</xloc>
+      <yloc>416</yloc>
     </entry>
   </entries>
   <hops>
@@ -568,6 +655,15 @@
     </hop>
     <hop>
       <from>DataMart 2</from>
+      <to>Success</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>Success</from>
       <to>Mail OK</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
@@ -577,7 +673,16 @@
     </hop>
     <hop>
       <from>Mail OK</from>
-      <to>Success</to>
+      <to>LOG OK</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>Y</unconditional>
+    </hop>
+    <hop>
+      <from>Error Mail</from>
+      <to>LOG ERROR</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>

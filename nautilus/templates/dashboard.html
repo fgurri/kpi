@@ -157,16 +157,28 @@
                         <thead>
                             <th class="text-center">Agenda</th>
                             <th class="text-center">Visites {{v_last_month}}</th>
+                            <th class="text-center">Visites {{v_previous_month}}</th>
+                            <th class="text-center">Variació mensual</th>
                             <th class="text-center">Visites {{v_last_month_last_year}}</th>
-                            <th class="text-center">Variació</th>
+                            <th class="text-center">Variació anual</th>
                         </thead>
                     <tbody>
                         {% for agenda in kpi_agendes %}
                             <tr>
                                 <td class="text-center">{{agenda.name}}</td>
                                 <td class="text-center">{{agenda.visites}}</td>
+                                <td class="text-center">{{agenda.visites_mes_anterior}}</td>
+                                {% if agenda.inc_mensual >= 0 %}
+                                    <td class="text-center"><span class="inc_positive">{{agenda.inc_mensual}}%</span></td>
+                                {% else %}
+                                    <td class="text-center"><span class="inc_negative">{{agenda.inc_mensual}}%</span></td>
+                                {% endif %}
                                 <td class="text-center">{{agenda.visitesUltimAny}}</td>
-                                <td class="text-center">{{agenda.inc}}%</td>
+                                {% if agenda.inc >= 0 %}
+                                    <td class="text-center"><span class="inc_positive">{{agenda.inc}}%</span></td>
+                                {% else %}
+                                    <td class="text-center"><span class="inc_negative">{{agenda.inc}}%</span></td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>

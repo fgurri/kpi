@@ -17,5 +17,6 @@ urlpatterns = [
     path('lvpm', views.plot_last_visits_per_month, name='lvpm'),
     path('vpp', views.plot_visits_per_patient, name='vpp'),
     path('pcpf', views.plot_casual_vs_fidelizied, name='pcpf'),
-    path('dtlv', views.plot_distance_to_lastmonth, name='dtlv')
+    path('dtlv', views.plot_distance_to_lastmonth, name='dtlv'),
+    path('info', views.info, name='info')
 ]

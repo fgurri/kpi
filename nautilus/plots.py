@@ -605,7 +605,7 @@ def plot_evolution_new_patients_per_spec(p_id_especiality=None, p_id_agenda=None
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
             sql = 'SELECT f_month as Mes, CONCAT(LEFT(f_month,4), "-", f_monthname) as MesNom, sum(f_newPatients) as NewPatients from dm2_newpatient_per_month_agenda WHERE '
-            if p_id_especiality is None and p_id_agenda is None:
+            if (p_id_especiality is None or p_id_especiality == '') and p_id_agenda is None:
                 p_id_especiality = 19# medicina general per defecte
             if (p_id_especiality is not None) and p_id_especiality != "":
                 sql = sql + 'f_idEspecialitat=' + str(p_id_especiality) + ' '
