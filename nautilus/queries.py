@@ -2,6 +2,8 @@ import configparser
 
 import mysql.connector
 from mysql.connector import Error
+import pandas as pd
+import numpy as np
 
 import nautilus.utils as u
 
@@ -393,6 +395,125 @@ def get_KPI_Agendas(p_lastmonth):
         # closing database connection.
         if (connection.is_connected()):
             cursor.close()
+            connection.close()
+
+
+""" For each agenda in dm1_visits_per_agenda, counts the number of visits of
+    given month (format YYYYMM), visits of the same month of last year and
+    interanual variation in %. Comparative to previous month is also given.
+
+    usage::
+
+        >>> import queries
+        >>> agendas_array = get_KPI_Agendas(201904)
+        >>> for agenda in agendas_array:
+        >>>     print(agenda.name + ': ' + agenda.inc + '%')
+
+
+    :param:
+    :rtype: array of tuples {'name': name, 'visites': visits, 'visitesUltimAny': visits12monthsago, 'inc': interanual_inc, 'visites_mes_anterior': visites_mes_anterior, 'inc_mensual': inc_mensual}
+"""
+def get_KPI_general(p_num_months):
+    try:
+        connection = mysql.connector.connect(host=config.get('DatabaseSection', 'database.host'),
+                                             database=config.get('DatabaseSection', 'database.dbname'),
+                                             user=config.get('DatabaseSection', 'database.user'),
+                                             password=config.get('DatabaseSection', 'database.password'))
+        if connection.is_connected():
+            # resulting dataframe will be transposed, so column order is important
+            sql = 'SELECT f_month, f_visits_casuals+f_visits_fidelitzats as f_visits, f_patients,f_new_patients,f_casuals,f_fidelitzats,f_visits_casuals,f_visits_fidelitzats FROM datawarehouse.dm2_stats_per_month ORDER BY f_month DESC LIMIT '+str(p_num_months+1)
+            df = pd.read_sql(sql, connection)
+            df = df.sort_values(by=['f_month'])
+            """
+            dataframe has now as many rows as attributes we want to analise, and p_num_months+1 columns
+            row 0: f_month (heading)
+            row 1: f_visits
+            row 2: f_patients
+            row 3: f_new_patients
+            row 4: f_casuals
+            row 5: f_fidelitzats
+            row 6: f_visits_casuals
+            row 7: f_visits_fidelitzats
+            """
+            month = 0
+            patients = 0
+            new_patients = 0
+            casual_patients = 0
+            fidelizied_patients = 0
+            visits_casual_patients = 0
+            visits_fidelizied_patients = 0
+            visits = 0
+
+            matrix = np.zeros((p_num_months+1, 15))
+            matrix = matrix.astype('str')
+            matrix[0][0]=''
+            matrix[0][1]='Pacients'
+            matrix[0][2]='Captació'
+            matrix[0][3]='Pacients casuals'
+            matrix[0][4]='Pacients fidelitzats'
+            matrix[0][5]='Visites casuals'
+            matrix[0][6]='Visites fidelitzats'
+            matrix[0][7]='inc_patients'
+            matrix[0][8]='inc_new_patients'
+            matrix[0][9]='inc_casual_patients'
+            matrix[0][10]='inc_fidelizied_patients'
+            matrix[0][11]='inc_visits_casual_patients'
+            matrix[0][12]='inc_visits_fidelizied_patients'
+            matrix[0][13]='Visites'
+            matrix[0][14]='inc_visits'
+            i = 1;
+            for index, row in df.iterrows():
+                if month == 0:
+                    #we are in the extra row. we only need it to calc first row variation
+                    month = row['f_month']
+                    patients = row['f_patients']
+                    new_patients = row['f_new_patients']
+                    casual_patients = row['f_casuals']
+                    fidelizied_patients = row['f_fidelitzats']
+                    visits_casual_patients = row['f_visits_casuals']
+                    visits_fidelizied_patients = row['f_visits_fidelitzats']
+                    visits = row['f_visits']
+                    continue
+                #calc increments: current value - last value
+                inc_patients = row['f_patients'] - patients
+                inc_new_patients = row['f_new_patients'] - new_patients
+                inc_casual_patients = row['f_casuals'] - casual_patients
+                inc_fidelizied_patients = row['f_fidelitzats'] - fidelizied_patients
+                inc_visits_casual_patients = row['f_visits_casuals'] - visits_casual_patients
+                inc_visits_fidelizied_patients = row['f_visits_fidelitzats'] - visits_fidelizied_patients
+                inc_visits = row['f_visits'] - visits
+
+                month = row['f_month']
+                patients = row['f_patients']
+                new_patients = row['f_new_patients']
+                casual_patients = row['f_casuals']
+                fidelizied_patients = row['f_fidelitzats']
+                visits_casual_patients = row['f_visits_casuals']
+                visits_fidelizied_patients = row['f_visits_fidelitzats']
+                visits = row['f_visits']
+                matrix[i][0]=u.yyyymmToMonthName(str(month))
+                matrix[i][1]=patients
+                matrix[i][2]=new_patients
+                matrix[i][3]=casual_patients
+                matrix[i][4]=fidelizied_patients
+                matrix[i][5]=visits_casual_patients
+                matrix[i][6]=visits_fidelizied_patients
+                matrix[i][7]=inc_patients
+                matrix[i][8]=inc_new_patients
+                matrix[i][9]=inc_casual_patients
+                matrix[i][10]=inc_fidelizied_patients
+                matrix[i][11]=inc_visits_casual_patients
+                matrix[i][12]=inc_visits_fidelizied_patients
+                matrix[i][13]=visits
+                matrix[i][14]=inc_visits
+                i += 1
+            return np.transpose(matrix)
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        # closing database connection.
+        if (connection.is_connected()):
             connection.close()
 
 

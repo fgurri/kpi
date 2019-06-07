@@ -12,28 +12,14 @@ def info(request):
 
 
 def dashboard(request):
-    # gest last month in YYYYMM format
-    currYear = datetime.datetime.now().year
-    lastYear = currYear - 1
     now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
     last_month = str(now.year) + str(now.month).zfill(2)
     last_month_last_year = str(now.year-1) + str(now.month).zfill(2)
-    vis, pat = q.get_Visits(str(currYear), str(last_month))
-    last_vis, last_pat = q.get_Visits(str(lastYear), str(lastYear)+last_month[-2:])
-    total_vis, total_pat = q.get_Visits()
     return render(request, 'dashboard.html', {
         'v_last_month': u.yyyymmToMonthName(last_month),
-        'v_last_month_last_year': u.yyyymmToMonthName(last_month_last_year),
         'v_previous_month': u.yyyymmToMonthName(u.yyyymm_add_months(last_month, -1)),
-        'v_visits_total' : total_vis,
-        'v_visits_current_year': vis,
-        'v_visits_last_year': last_vis,
-        'v_patients_total': total_pat,
-        'v_patients_current_year': pat,
-        'v_patients_last_year': last_pat,
-        'v_fidelity_total': round(total_vis/total_pat, 2),
-        'v_fidelity_current_year': round(vis/pat, 2),
-        'v_fidelity_last_year': round(last_vis/last_pat, 2),
+        'v_last_month_last_year': u.yyyymmToMonthName(last_month_last_year),
+        'kpi_general_matrix': q.get_KPI_general(5),
         'kpi_agendes': q.get_KPI_Agendas(last_month),
         'plot_rep_med_gen': p.plot_frequency_per_agenda('AG100'),
         'plot_rep_endos': p.plot_frequency_per_agenda('AG45'),

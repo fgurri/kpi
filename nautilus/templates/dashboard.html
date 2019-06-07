@@ -1,82 +1,273 @@
 {% extends "base.html" %}
+{% load tag_library %}
 {% block content %}
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-12">
             <div class="panel panel-info">
-              <div class="panel-heading">
-                KPI_01: Assistencia
-              </div>
-              <div class="panel-body">
-                <table width='100%' class='table table-responsive'>
-                    <tbody>
-                    <tr>
-                        <td>Total visites:</td>
-                        <td>{{v_visits_total}}</td>
-                    </tr>
-                    <tr>
-                        <td>Visites 2019:</td>
-                        <td>{{v_visits_current_year}}</td>
-                    </tr>
-                    <tr>
-                        <td>Visites 2018:</td>
-                        <td>{{v_visits_last_year}}</td>
-                    </tr>
-                </tbody>
-                </table>
-
-              </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="panel panel-info">
-              <div class="panel-heading">
-                KPI_02: Pacients
-              </div>
-              <div class="panel-body">
-                <table width='100%' class='table table-responsive'>
-                    <tbody>
-                    <tr>
-                        <td>Total pacients:</td>
-                        <td>{{v_patients_total}}</td>
-                    </tr>
-                    <tr>
-                        <td>Pacients 2019:</td>
-                        <td>{{v_patients_current_year}}</td>
-                    </tr>
-                    <tr>
-                        <td>Pacients 2018:</td>
-                        <td>{{v_patients_last_year}}</td>
-                    </tr>
-                </tbody>
-                </table>
-
-              </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="panel panel-info">
-              <div class="panel-heading">
-                KPI_03: Fidelització
-              </div>
-              <div class="panel-body">
-                <table width='100%' class='table table-responsive'>
-                    <tbody>
-                    <tr>
-                        <td>Total repetitivitat:</td>
-                        <td>{{v_fidelity_total}}</td>
-                    </tr>
-                    <tr>
-                        <td>Repetitivitat 2019:</td>
-                        <td>{{v_fidelity_current_year}}</td>
-                    </tr>
-                    <tr>
-                        <td>Repetitivitat 2018:</td>
-                        <td>{{v_fidelity_last_year}}</td>
-                    </tr>
-                </tbody>
-                </table>
-
-              </div>
+                <div class="panel-heading">
+                    KPI_01: Indicadors generals
+                </div>
+                <div class="panel-body">
+                    <!-- Manually constructed table because django template doesn't have a wait to loop throw a matrix like this: cell.x.y -->
+                    <!-- TODO: Search for alternatives -->
+                    <table class="table table-responsive">
+                        <thead>
+                            <th></th>
+                            <th>{{kpi_general_matrix.0.1}}</th>
+                            <th>{{kpi_general_matrix.0.2}}</th>
+                            <th>{{kpi_general_matrix.0.3}}</th>
+                            <th>{{kpi_general_matrix.0.4}}</th>
+                            <th>{{kpi_general_matrix.0.5}}</th>
+                        </thead>
+                        <tbody>
+                        <!-- Patients -->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.1.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.7.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.1}}&nbsp;({{kpi_general_matrix.7.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.1}}&nbsp;({{kpi_general_matrix.7.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.7.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.2}}&nbsp;({{kpi_general_matrix.7.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.2}}&nbsp;({{kpi_general_matrix.7.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.7.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.3}}&nbsp;({{kpi_general_matrix.7.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.3}}&nbsp;({{kpi_general_matrix.7.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.7.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.4}}&nbsp;({{kpi_general_matrix.7.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.4}}&nbsp;({{kpi_general_matrix.7.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.7.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.5}}&nbsp;({{kpi_general_matrix.7.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.5}}&nbsp;({{kpi_general_matrix.7.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        <!-- New Patients -->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.2.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.8.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.1}}&nbsp;({{kpi_general_matrix.8.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.1}}&nbsp;({{kpi_general_matrix.8.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.8.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.2}}&nbsp;({{kpi_general_matrix.8.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.2}}&nbsp;({{kpi_general_matrix.8.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.8.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.3}}&nbsp;({{kpi_general_matrix.8.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.3}}&nbsp;({{kpi_general_matrix.8.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.8.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.4}}&nbsp;({{kpi_general_matrix.8.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.4}}&nbsp;({{kpi_general_matrix.8.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.8.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.5}}&nbsp;({{kpi_general_matrix.8.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.5}}&nbsp;({{kpi_general_matrix.8.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        <!-- Casual Patients -->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.3.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.9.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.1}}&nbsp;({{kpi_general_matrix.9.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.1}}&nbsp;({{kpi_general_matrix.9.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.9.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.2}}&nbsp;({{kpi_general_matrix.9.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.2}}&nbsp;({{kpi_general_matrix.9.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.9.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.3}}&nbsp;({{kpi_general_matrix.9.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.3}}&nbsp;({{kpi_general_matrix.9.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.9.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.4}}&nbsp;({{kpi_general_matrix.9.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.4}}&nbsp;({{kpi_general_matrix.9.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.9.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.5}}&nbsp;({{kpi_general_matrix.9.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.5}}&nbsp;({{kpi_general_matrix.9.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        <!-- Fidelitzied Patients -->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.4.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.10.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.1}}&nbsp;({{kpi_general_matrix.10.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.1}}&nbsp;({{kpi_general_matrix.10.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.10.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.2}}&nbsp;({{kpi_general_matrix.10.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.2}}&nbsp;({{kpi_general_matrix.10.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.10.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.3}}&nbsp;({{kpi_general_matrix.10.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.3}}&nbsp;({{kpi_general_matrix.10.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.10.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.4}}&nbsp;({{kpi_general_matrix.10.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.4}}&nbsp;({{kpi_general_matrix.10.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.10.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.5}}&nbsp;({{kpi_general_matrix.10.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.5}}&nbsp;({{kpi_general_matrix.10.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        <!-- Visits -->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.13.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.14.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.1}}&nbsp;({{kpi_general_matrix.14.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.1}}&nbsp;({{kpi_general_matrix.14.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.14.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.2}}&nbsp;({{kpi_general_matrix.14.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.2}}&nbsp;({{kpi_general_matrix.14.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.14.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.3}}&nbsp;({{kpi_general_matrix.14.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.3}}&nbsp;({{kpi_general_matrix.14.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.14.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.4}}&nbsp;({{kpi_general_matrix.14.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.4}}&nbsp;({{kpi_general_matrix.14.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.14.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.5}}&nbsp;({{kpi_general_matrix.14.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.5}}&nbsp;({{kpi_general_matrix.14.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        <!-- Visits casuals-->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.5.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.11.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.1}}&nbsp;({{kpi_general_matrix.11.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.1}}&nbsp;({{kpi_general_matrix.11.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.11.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.2}}&nbsp;({{kpi_general_matrix.11.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.2}}&nbsp;({{kpi_general_matrix.11.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.11.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.3}}&nbsp;({{kpi_general_matrix.11.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.3}}&nbsp;({{kpi_general_matrix.11.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.11.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.4}}&nbsp;({{kpi_general_matrix.11.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.4}}&nbsp;({{kpi_general_matrix.11.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.11.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.5}}&nbsp;({{kpi_general_matrix.11.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.5}}&nbsp;({{kpi_general_matrix.11.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        <!-- Visits fidelizied -->
+                        <tr>
+                            <!-- kpi -->
+                            <td>{{kpi_general_matrix.6.0}}</td>
+                            <!-- Month 1 -->
+                            {% if kpi_general_matrix.12.1|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.1}}&nbsp;({{kpi_general_matrix.12.1}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.1}}&nbsp;({{kpi_general_matrix.12.1}})</span></td>
+                            {% endif %}
+                            <!-- Month 2 -->
+                            {% if kpi_general_matrix.12.2|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.2}}&nbsp;({{kpi_general_matrix.12.2}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.2}}&nbsp;({{kpi_general_matrix.12.2}})</span></td>
+                            {% endif %}
+                            <!-- Month 3 -->
+                            {% if kpi_general_matrix.12.3|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.3}}&nbsp;({{kpi_general_matrix.12.3}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.3}}&nbsp;({{kpi_general_matrix.12.3}})</span></td>
+                            {% endif %}
+                            <!-- Month 4 -->
+                            {% if kpi_general_matrix.12.4|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.4}}&nbsp;({{kpi_general_matrix.12.4}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.4}}&nbsp;({{kpi_general_matrix.12.4}})</span></td>
+                            {% endif %}
+                            <!-- Month 5 -->
+                            {% if kpi_general_matrix.12.5|to_int > 0 %}
+                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.5}}&nbsp;({{kpi_general_matrix.12.5}})</span></td>
+                            {% else %}
+                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.5}}&nbsp;({{kpi_general_matrix.12.5}})</span></td>
+                            {% endif %}
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -84,7 +275,7 @@
         <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_04: Repetitivitat Medicina General
+                    KPI_02: Repetitivitat Medicina General
                 </div>
                 <div class="panel-body">
                     {{plot_rep_med_gen|safe}}
@@ -94,7 +285,7 @@
         <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_05: Repetitivitat Fisioterapia
+                    KPI_03: Repetitivitat Fisioterapia
                 </div>
                 <div class="panel-body">
                     {{plot_rep_endos|safe}}
@@ -106,7 +297,7 @@
         <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_06: Evolució pacients
+                    KPI_04: Evolució pacients
                 </div>
                 <div class="panel-body">
                     {{plot_patients|safe}}
@@ -116,7 +307,7 @@
         <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_07: Evolució nous pacients
+                    KPI_05: Evolució nous pacients
                 </div>
                 <div class="panel-body">
                     {{plot_new_patients|safe}}
@@ -128,7 +319,7 @@
         <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_08: Distribució pacients
+                    KPI_06: Distribució pacients
                 </div>
                 <div class="panel-body">
                     {{plot_distribution_new_patients|safe}}
@@ -138,7 +329,7 @@
         <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_09: Distribució nous pacients per especialitat (mes anterior)
+                    KPI_07: Distribució nous pacients per especialitat (mes anterior)
                 </div>
                 <div class="panel-body">
                     {{plot_distribution_new_patients_per_spec|safe}}
@@ -150,7 +341,7 @@
         <div class="col-md-12">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_10: Agendes
+                    KPI_08: Agendes
                 </div>
                 <div class="panel-body">
                     <table class="table table-striped table-hover table-dataTable">
@@ -188,3 +379,4 @@
         </div>
     </div>
 {% endblock %}
+

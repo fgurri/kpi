@@ -30,3 +30,11 @@
     font-weight: bold;
     color: red;
 }
+.kpi-increase {
+    font-weight: bold;
+    color: #06BB16;
+}
+.kpi-decrease {
+    font-weight: bold;
+    color: red;
+}

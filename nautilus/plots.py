@@ -693,7 +693,7 @@ def plot_distribution_new_patients_per_spec(p_first_month, p_last_month):
             df = pd.read_sql(sql, connection)
             trace_new_patients = go.Pie(labels=df['Spec'], values=df['NewPatients'])
 
-            graph_title = 'Distribució nous pacients per especialitat (Del ' + u.yyyymmToMonthName(p_first_month) + ' al ' + u.yyyymmToMonthName(p_last_month) + ')'
+            graph_title = 'Nous pacients per especialitat (Del ' + u.yyyymmToMonthName(p_first_month) + ' al ' + u.yyyymmToMonthName(p_last_month) + ')'
             data = [trace_new_patients]
             layout = go.Layout(
                 title=graph_title,
