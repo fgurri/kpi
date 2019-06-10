@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 import nautilus.utils as u
+from nautilus.models import Cell
 
 # read properties on project root
 config = configparser.RawConfigParser()
@@ -420,94 +421,49 @@ def get_KPI_general(p_num_months):
                                              user=config.get('DatabaseSection', 'database.user'),
                                              password=config.get('DatabaseSection', 'database.password'))
         if connection.is_connected():
-            # resulting dataframe will be transposed, so column order is important
-            sql = 'SELECT f_month, f_visits_casuals+f_visits_fidelitzats as f_visits, f_patients,f_new_patients,f_casuals,f_fidelitzats,f_visits_casuals,f_visits_fidelitzats FROM datawarehouse.dm2_stats_per_month ORDER BY f_month DESC LIMIT '+str(p_num_months+1)
+            sql = 'SELECT f_month, f_visits, f_inc_visits, f_visits_casuals, f_inc_visits_casuals, f_visits_fidelitzats, f_inc_visits_fidelitzats, f_patients, f_inc_patients, f_new_patients, f_inc_new_patients, f_casuals, f_inc_casuals, f_fidelitzats, f_inc_fidelitzats FROM datawarehouse.dm2_stats_per_month ORDER BY f_month DESC LIMIT ' + str(p_num_months)
             df = pd.read_sql(sql, connection)
+            #we cannot sort on sql because we want n last months from oldest to newest. So we filter last 5 on sql and order from old to new in data frame
             df = df.sort_values(by=['f_month'])
-            """
-            dataframe has now as many rows as attributes we want to analise, and p_num_months+1 columns
-            row 0: f_month (heading)
-            row 1: f_visits
-            row 2: f_patients
-            row 3: f_new_patients
-            row 4: f_casuals
-            row 5: f_fidelitzats
-            row 6: f_visits_casuals
-            row 7: f_visits_fidelitzats
-            """
-            month = 0
-            patients = 0
-            new_patients = 0
-            casual_patients = 0
-            fidelizied_patients = 0
-            visits_casual_patients = 0
-            visits_fidelizied_patients = 0
-            visits = 0
+            # we want months to be headers, so we return transposed data frame
+            df_transposed = df.T
 
-            matrix = np.zeros((p_num_months+1, 15))
-            matrix = matrix.astype('str')
-            matrix[0][0]=''
-            matrix[0][1]='Pacients'
-            matrix[0][2]='Captació'
-            matrix[0][3]='Pacients casuals'
-            matrix[0][4]='Pacients fidelitzats'
-            matrix[0][5]='Visites casuals'
-            matrix[0][6]='Visites fidelitzats'
-            matrix[0][7]='inc_patients'
-            matrix[0][8]='inc_new_patients'
-            matrix[0][9]='inc_casual_patients'
-            matrix[0][10]='inc_fidelizied_patients'
-            matrix[0][11]='inc_visits_casual_patients'
-            matrix[0][12]='inc_visits_fidelizied_patients'
-            matrix[0][13]='Visites'
-            matrix[0][14]='inc_visits'
-            i = 1;
-            for index, row in df.iterrows():
-                if month == 0:
-                    #we are in the extra row. we only need it to calc first row variation
-                    month = row['f_month']
-                    patients = row['f_patients']
-                    new_patients = row['f_new_patients']
-                    casual_patients = row['f_casuals']
-                    fidelizied_patients = row['f_fidelitzats']
-                    visits_casual_patients = row['f_visits_casuals']
-                    visits_fidelizied_patients = row['f_visits_fidelitzats']
-                    visits = row['f_visits']
-                    continue
-                #calc increments: current value - last value
-                inc_patients = row['f_patients'] - patients
-                inc_new_patients = row['f_new_patients'] - new_patients
-                inc_casual_patients = row['f_casuals'] - casual_patients
-                inc_fidelizied_patients = row['f_fidelitzats'] - fidelizied_patients
-                inc_visits_casual_patients = row['f_visits_casuals'] - visits_casual_patients
-                inc_visits_fidelizied_patients = row['f_visits_fidelitzats'] - visits_fidelizied_patients
-                inc_visits = row['f_visits'] - visits
+            kpi_dict = {}
+            kpi_dict['kpis'] = {}
+            kpi_dict['header'] = df_transposed.iloc[0]
 
-                month = row['f_month']
-                patients = row['f_patients']
-                new_patients = row['f_new_patients']
-                casual_patients = row['f_casuals']
-                fidelizied_patients = row['f_fidelitzats']
-                visits_casual_patients = row['f_visits_casuals']
-                visits_fidelizied_patients = row['f_visits_fidelitzats']
-                visits = row['f_visits']
-                matrix[i][0]=u.yyyymmToMonthName(str(month))
-                matrix[i][1]=patients
-                matrix[i][2]=new_patients
-                matrix[i][3]=casual_patients
-                matrix[i][4]=fidelizied_patients
-                matrix[i][5]=visits_casual_patients
-                matrix[i][6]=visits_fidelizied_patients
-                matrix[i][7]=inc_patients
-                matrix[i][8]=inc_new_patients
-                matrix[i][9]=inc_casual_patients
-                matrix[i][10]=inc_fidelizied_patients
-                matrix[i][11]=inc_visits_casual_patients
-                matrix[i][12]=inc_visits_fidelizied_patients
-                matrix[i][13]=visits
-                matrix[i][14]=inc_visits
-                i += 1
-            return np.transpose(matrix)
+            kpi_visits = []
+            kpi_visits_casual = []
+            kpi_visits_fidelitzats = []
+            kpi_patients = []
+            kpi_new_patients = []
+            kpi_casuals = []
+            kpi_fidelitzats = []
+            #manually construct kpis based on indicator and its inc row (i.e. f_visits with f_inc_visits)
+            for i in range (p_num_months-1, -1, -1):
+                c=Cell(df_transposed.loc[['f_visits']][i].f_visits, df_transposed.loc[['f_inc_visits']][i].f_inc_visits)
+                kpi_visits.append(c)
+                c=Cell(df_transposed.loc[['f_visits_casuals']][i].f_visits_casuals, df_transposed.loc[['f_inc_visits_casuals']][i].f_inc_visits_casuals)
+                kpi_visits_casual.append(c)
+                c=Cell(df_transposed.loc[['f_visits_fidelitzats']][i].f_visits_fidelitzats, df_transposed.loc[['f_inc_visits_fidelitzats']][i].f_inc_visits_fidelitzats)
+                kpi_visits_fidelitzats.append(c)
+                c=Cell(df_transposed.loc[['f_patients']][i].f_patients, df_transposed.loc[['f_inc_patients']][i].f_inc_patients)
+                kpi_patients.append(c)
+                c=Cell(df_transposed.loc[['f_new_patients']][i].f_new_patients, df_transposed.loc[['f_inc_new_patients']][i].f_inc_new_patients)
+                kpi_new_patients.append(c)
+                c=Cell(df_transposed.loc[['f_casuals']][i].f_casuals, df_transposed.loc[['f_inc_casuals']][i].f_inc_casuals)
+                kpi_casuals.append(c)
+                c=Cell(df_transposed.loc[['f_fidelitzats']][i].f_fidelitzats, df_transposed.loc[['f_inc_fidelitzats']][i].f_inc_fidelitzats)
+                kpi_fidelitzats.append(c)
+
+            kpi_dict['kpis'].update({'Visites' : kpi_visits})
+            kpi_dict['kpis'].update({'Visites casuals' : kpi_visits_casual})
+            kpi_dict['kpis'].update({'Visites fidelitzats' : kpi_visits_fidelitzats})
+            kpi_dict['kpis'].update({'Pacients' : kpi_patients})
+            kpi_dict['kpis'].update({'Pacients nous' : kpi_new_patients})
+            kpi_dict['kpis'].update({'Pacients casuals' : kpi_casuals})
+            kpi_dict['kpis'].update({'Pacients fidelitzats' : kpi_fidelitzats})
+        return kpi_dict
 
     except Error as e:
         print("Error while connecting to MySQL", e)

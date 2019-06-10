@@ -19,7 +19,7 @@ def dashboard(request):
         'v_last_month': u.yyyymmToMonthName(last_month),
         'v_previous_month': u.yyyymmToMonthName(u.yyyymm_add_months(last_month, -1)),
         'v_last_month_last_year': u.yyyymmToMonthName(last_month_last_year),
-        'kpi_general_matrix': q.get_KPI_general(5),
+        'kpi_dict': q.get_KPI_general(6),
         'kpi_agendes': q.get_KPI_Agendas(last_month),
         'plot_rep_med_gen': p.plot_frequency_per_agenda('AG100'),
         'plot_rep_endos': p.plot_frequency_per_agenda('AG45'),

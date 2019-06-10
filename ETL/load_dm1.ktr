@@ -437,7 +437,7 @@
   <notepads>
   </notepads>
   <connection>
-    <name>MySQL-localhost</name>
+    <name>datawarehouse_localhost</name>
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
@@ -492,21 +492,57 @@
     </attributes>
   </connection>
   <connection>
-    <name>TesisComu</name>
-    <server>10.44.2.20</server>
-    <type>CACHE</type>
+    <name>MySQL-localhost</name>
+    <server>localhost</server>
+    <type>MYSQL</type>
     <access>Native</access>
-    <database>TESISCOMU</database>
-    <port>1972</port>
-    <username>fgurri</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb3ffd62cc93a1fd</password>
+    <database>datawarehouse</database>
+    <port>3306</port>
+    <username>datawarehouse</username>
+    <password>Encrypted 2be98afc86ad09396ae11a165cd97ff82</password>
     <servername />
     <data_tablespace />
     <index_tablespace />
     <attributes>
       <attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>1972</attribute>
+        <attribute>3306</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>STREAM_RESULTS</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
@@ -629,18 +665,18 @@ WHERE e.f_idEspecialitat = ea.f_idEspecialitat
       <method>none</method>
       <schema_name />
     </partitioning>
-    <connection>TesisComu</connection>
+    <connection>datawarehouse_localhost</connection>
     <sql>SELECT idAgenda,
-	LEFT(dataProgramacio, 6) as yyyymm,
-	LEFT(dataProgramacio, 4) as yyyy, 
-	count(*) as total,
+	REPLACE(LEFT(dataProgramacio, 7),'-','') as yyyymm,
+    LEFT(dataProgramacio, 4) as yyyy,
+    count(*) as total,
 	count(distinct numHistoria) as patients
-FROM Client.DadesCites
+FROM bi_visites
 GROUP BY idAgenda,
-	LEFT(dataProgramacio, 6),
-	LEFT(dataProgramacio, 4)
-HAVING LEFT(dataProgramacio, 6) &lt; {fn CONCAT(YEAR(getdate()),LPAD(MONTH(getdate()),2,'0'))}
-	AND LEFT(dataProgramacio, 6) >= '201301'
+	REPLACE(LEFT(dataProgramacio, 7),'-',''),
+    LEFT(dataProgramacio, 4)
+HAVING yyyymm &lt; CONCAT(YEAR(CURRENT_DATE()), LPAD(MONTH(CURRENT_DATE()),2,'0'))
+	AND yyyymm >= '201301'
 
 
 </sql>

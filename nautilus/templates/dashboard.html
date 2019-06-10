@@ -13,258 +13,23 @@
                     <table class="table table-responsive">
                         <thead>
                             <th></th>
-                            <th>{{kpi_general_matrix.0.1}}</th>
-                            <th>{{kpi_general_matrix.0.2}}</th>
-                            <th>{{kpi_general_matrix.0.3}}</th>
-                            <th>{{kpi_general_matrix.0.4}}</th>
-                            <th>{{kpi_general_matrix.0.5}}</th>
+                            {% for index, row in kpi_dict.header.items %}
+                                <th>{{row|to_yyyy_monthname}}</th>
+                            {% endfor %}
                         </thead>
                         <tbody>
-                        <!-- Patients -->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.1.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.7.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.1}}&nbsp;({{kpi_general_matrix.7.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.1}}&nbsp;({{kpi_general_matrix.7.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.7.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.2}}&nbsp;({{kpi_general_matrix.7.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.2}}&nbsp;({{kpi_general_matrix.7.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.7.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.3}}&nbsp;({{kpi_general_matrix.7.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.3}}&nbsp;({{kpi_general_matrix.7.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.7.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.4}}&nbsp;({{kpi_general_matrix.7.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.4}}&nbsp;({{kpi_general_matrix.7.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.7.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.1.5}}&nbsp;({{kpi_general_matrix.7.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.1.5}}&nbsp;({{kpi_general_matrix.7.5}})</span></td>
-                            {% endif %}
-                        </tr>
-                        <!-- New Patients -->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.2.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.8.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.1}}&nbsp;({{kpi_general_matrix.8.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.1}}&nbsp;({{kpi_general_matrix.8.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.8.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.2}}&nbsp;({{kpi_general_matrix.8.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.2}}&nbsp;({{kpi_general_matrix.8.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.8.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.3}}&nbsp;({{kpi_general_matrix.8.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.3}}&nbsp;({{kpi_general_matrix.8.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.8.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.4}}&nbsp;({{kpi_general_matrix.8.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.4}}&nbsp;({{kpi_general_matrix.8.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.8.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.2.5}}&nbsp;({{kpi_general_matrix.8.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.2.5}}&nbsp;({{kpi_general_matrix.8.5}})</span></td>
-                            {% endif %}
-                        </tr>
-                        <!-- Casual Patients -->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.3.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.9.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.1}}&nbsp;({{kpi_general_matrix.9.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.1}}&nbsp;({{kpi_general_matrix.9.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.9.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.2}}&nbsp;({{kpi_general_matrix.9.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.2}}&nbsp;({{kpi_general_matrix.9.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.9.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.3}}&nbsp;({{kpi_general_matrix.9.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.3}}&nbsp;({{kpi_general_matrix.9.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.9.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.4}}&nbsp;({{kpi_general_matrix.9.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.4}}&nbsp;({{kpi_general_matrix.9.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.9.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.3.5}}&nbsp;({{kpi_general_matrix.9.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.3.5}}&nbsp;({{kpi_general_matrix.9.5}})</span></td>
-                            {% endif %}
-                        </tr>
-                        <!-- Fidelitzied Patients -->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.4.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.10.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.1}}&nbsp;({{kpi_general_matrix.10.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.1}}&nbsp;({{kpi_general_matrix.10.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.10.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.2}}&nbsp;({{kpi_general_matrix.10.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.2}}&nbsp;({{kpi_general_matrix.10.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.10.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.3}}&nbsp;({{kpi_general_matrix.10.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.3}}&nbsp;({{kpi_general_matrix.10.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.10.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.4}}&nbsp;({{kpi_general_matrix.10.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.4}}&nbsp;({{kpi_general_matrix.10.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.10.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.4.5}}&nbsp;({{kpi_general_matrix.10.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.4.5}}&nbsp;({{kpi_general_matrix.10.5}})</span></td>
-                            {% endif %}
-                        </tr>
-                        <!-- Visits -->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.13.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.14.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.1}}&nbsp;({{kpi_general_matrix.14.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.1}}&nbsp;({{kpi_general_matrix.14.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.14.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.2}}&nbsp;({{kpi_general_matrix.14.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.2}}&nbsp;({{kpi_general_matrix.14.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.14.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.3}}&nbsp;({{kpi_general_matrix.14.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.3}}&nbsp;({{kpi_general_matrix.14.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.14.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.4}}&nbsp;({{kpi_general_matrix.14.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.4}}&nbsp;({{kpi_general_matrix.14.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.14.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.13.5}}&nbsp;({{kpi_general_matrix.14.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.13.5}}&nbsp;({{kpi_general_matrix.14.5}})</span></td>
-                            {% endif %}
-                        </tr>
-                        <!-- Visits casuals-->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.5.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.11.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.1}}&nbsp;({{kpi_general_matrix.11.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.1}}&nbsp;({{kpi_general_matrix.11.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.11.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.2}}&nbsp;({{kpi_general_matrix.11.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.2}}&nbsp;({{kpi_general_matrix.11.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.11.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.3}}&nbsp;({{kpi_general_matrix.11.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.3}}&nbsp;({{kpi_general_matrix.11.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.11.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.4}}&nbsp;({{kpi_general_matrix.11.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.4}}&nbsp;({{kpi_general_matrix.11.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.11.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.5.5}}&nbsp;({{kpi_general_matrix.11.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.5.5}}&nbsp;({{kpi_general_matrix.11.5}})</span></td>
-                            {% endif %}
-                        </tr>
-                        <!-- Visits fidelizied -->
-                        <tr>
-                            <!-- kpi -->
-                            <td>{{kpi_general_matrix.6.0}}</td>
-                            <!-- Month 1 -->
-                            {% if kpi_general_matrix.12.1|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.1}}&nbsp;({{kpi_general_matrix.12.1}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.1}}&nbsp;({{kpi_general_matrix.12.1}})</span></td>
-                            {% endif %}
-                            <!-- Month 2 -->
-                            {% if kpi_general_matrix.12.2|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.2}}&nbsp;({{kpi_general_matrix.12.2}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.2}}&nbsp;({{kpi_general_matrix.12.2}})</span></td>
-                            {% endif %}
-                            <!-- Month 3 -->
-                            {% if kpi_general_matrix.12.3|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.3}}&nbsp;({{kpi_general_matrix.12.3}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.3}}&nbsp;({{kpi_general_matrix.12.3}})</span></td>
-                            {% endif %}
-                            <!-- Month 4 -->
-                            {% if kpi_general_matrix.12.4|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.4}}&nbsp;({{kpi_general_matrix.12.4}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.4}}&nbsp;({{kpi_general_matrix.12.4}})</span></td>
-                            {% endif %}
-                            <!-- Month 5 -->
-                            {% if kpi_general_matrix.12.5|to_int > 0 %}
-                                <td><span class='kpi-increase'>{{kpi_general_matrix.6.5}}&nbsp;({{kpi_general_matrix.12.5}})</span></td>
-                            {% else %}
-                                <td><span class='kpi-decrease'>{{kpi_general_matrix.6.5}}&nbsp;({{kpi_general_matrix.12.5}})</span></td>
-                            {% endif %}
-                        </tr>
+                            {% for index, row in kpi_dict.kpis.items %}
+                                <tr>
+                                    <td>{{index}}</td>
+                                    {% for cell in row %}
+                                        {% if cell.inc|to_int > 0 %}
+                                            <td><span class='kpi-increase'>{{cell.value}}&nbsp;({{cell.inc}} <i class="fas fa-arrow-up"></i>{% widthratio cell.inc cell.value 100 %}%)</span></td>
+                                        {% else %}
+                                            <td><span class='kpi-decrease'>{{cell.value}}&nbsp;({{cell.inc}}  <i class="fas fa-arrow-down"></i>{% widthratio cell.inc cell.value 100 %}%)</span></td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -341,7 +106,7 @@
         <div class="col-md-12">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    KPI_08: Agendes
+                    KPI_: Agendes
                 </div>
                 <div class="panel-body">
                     <table class="table table-striped table-hover table-dataTable">

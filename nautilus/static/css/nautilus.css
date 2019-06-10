@@ -16,7 +16,6 @@
     font-weight: bold;
     color: green;
 }
-
 .inc_negative {
     font-weight: bold;
     color: red;
@@ -24,7 +23,7 @@
 
 .log_ok {
     font-weight: bold;
-    color: green;
+    color: #06BB16;
 }
 .log_error  {
     font-weight: bold;

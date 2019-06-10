@@ -25,10 +25,18 @@ CREATE TABLE `dm2_stats_per_month` (
   `f_monthname` varchar(10) DEFAULT NULL,
   `f_patients` int(11) DEFAULT '0',
   `f_new_patients` int(11) DEFAULT '0',
-  `f_casuals` int(11) DEFAULT NULL,
-  `f_fidelitzats` int(11) DEFAULT NULL,
-  `f_visits_casuals` int(11) DEFAULT NULL,
-  `f_visits_fidelitzats` int(11) DEFAULT NULL,
+  `f_casuals` int(11) DEFAULT '0',
+  `f_fidelitzats` int(11) DEFAULT '0',
+  `f_visits_casuals` int(11) DEFAULT '0',
+  `f_visits_fidelitzats` int(11) DEFAULT '0',
+  `f_visits` int(11) DEFAULT '0',
+  `f_inc_visits` int(11) DEFAULT '0',
+  `f_inc_patients` int(11) DEFAULT '0',
+  `f_inc_new_patients` int(11) DEFAULT '0',
+  `f_inc_casuals` int(11) DEFAULT '0',
+  `f_inc_fidelitzats` int(11) DEFAULT '0',
+  `f_inc_visits_casuals` int(11) DEFAULT '0',
+  `f_inc_visits_fidelitzats` int(11) DEFAULT '0',
   PRIMARY KEY (`f_month`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
