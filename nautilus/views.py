@@ -1,8 +1,9 @@
-import nautilus.plots as p
-import nautilus.queries as q
 from django.shortcuts import render
 import datetime
 import dateutil.relativedelta
+
+import nautilus.plots as p
+import nautilus.queries as q
 import nautilus.utils as u
 
 
