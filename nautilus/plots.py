@@ -549,6 +549,8 @@ def plot_evolution_new_patients_per_spec(p_id_especiality=None, p_id_agenda=None
         sql = sql + 'GROUP BY f_month, CONCAT(LEFT(f_month,4), "-", f_monthname) '
         sql = sql + 'ORDER BY f_month ASC'
         df = pd.read_sql(sql, connection)
+        if df.empty:
+            return None
         trace_new_patients = go.Scatter(x=df['MesNom'],
                             y=df['NewPatients'],
                             mode='lines+markers',
