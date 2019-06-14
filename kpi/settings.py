@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_python3_ldap',
     'nautilus',
 ]
 
@@ -85,6 +86,13 @@ DATABASES = {
         'USER': 'datawarehouse',
         'PASSWORD': 'warehouse08',
         'HOST': 'localhost',
+    },
+    'intranet': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'intranet',
+        'USER': 'datawarehouse',
+        'PASSWORD': 'warehouse08',
+        'HOST': '10.44.2.18',
     }
 }
 
@@ -106,6 +114,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# authentication to remote (LDAP)
+
+AUTHENTICATION_BACKENDS = [
+    'django_python3_ldap.auth.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# login url
+
+LOGIN_URL = 'login'
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -129,3 +147,33 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'nautilus/static'),
 ]
+
+# django_python3_ldap settings
+
+# The URL of the LDAP server.
+LDAP_AUTH_URL = "ldap://10.44.2.17:389"
+
+LDAP_AUTH_USER_FIELDS = {
+    "username": "sAMAccountName",
+    "first_name": "givenName",
+    "last_name": "sn"
+}
+
+LDAP_AUTH_OBJECT_CLASS = "user"
+
+# Initiate TLS on connection.
+LDAP_AUTH_USE_TLS = False
+
+# The LDAP search base for looking up users.
+LDAP_AUTH_SEARCH_BASE = "DC=creugroga,DC=com,CN=Users"
+
+LDAP_AUTH_FORMAT_USERNAME = "django_python3_ldap.utils.format_username_active_directory_principal"
+LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = "creugroga.com"
+
+# Allow all authentified users
+
+NAUTILUS_REQUIRE_EXTERNAL_PERMISION = True
+
+# App id in intranet external site to check allowed users
+
+NAUTILUS_INTRANET_APP_ID = 11

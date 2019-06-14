@@ -1,6 +1,7 @@
 import datetime
 from django.test import TestCase, TransactionTestCase, Client
 from django.db import connection, connections, transaction
+from django.contrib.auth.models import User
 import json
 
 import nautilus.models as m
@@ -12,7 +13,7 @@ def _run_sql_script(sql_script, cursor):
     f = open(sql_script, 'r')
     query = " ".join(f.readlines())
     cursor.execute(query)
-"""
+
 class TestUtils(TestCase):
     def setUp(self):
         self.empty_string = ''
@@ -65,7 +66,86 @@ class TestUrls(TransactionTestCase):
 
     def test_urls(self):
         c = Client()
-        # existing urls
+        # check anonymous login to all urls
+        response = c.post('/nautilus/')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/dashboard')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/pm')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/papm')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/pcpe')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/nppe')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/nptpe')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/nppepm')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/fbpa')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/fbpaps')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/fpa')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/lvpm')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/vpp')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/pcpf')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/dtlv')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/info')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        response = c.post('/nautilus/logout')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
+
+        # login is the only page accessible in anonymous mode
+        response = c.post('/nautilus/login')
+        self.assertTrue(response.status_code == 200)
+
+        # not existing
+        self.assertTrue(c.post('/dont_exists').status_code != 200)
+
+        #
+        # login testuser and check again all urls
+        #
+        c.force_login(User.objects.get_or_create(username='testuser')[0])
         self.assertTrue(c.post('/nautilus/').status_code == 200)
         self.assertTrue(c.post('/nautilus/dashboard').status_code == 200)
         self.assertTrue(c.post('/nautilus/pm').status_code == 200)
@@ -82,9 +162,12 @@ class TestUrls(TransactionTestCase):
         self.assertTrue(c.post('/nautilus/pcpf').status_code == 200)
         self.assertTrue(c.post('/nautilus/dtlv').status_code == 200)
         self.assertTrue(c.post('/nautilus/info').status_code == 200)
-        # not existing
-        self.assertTrue(c.post('/dont_exists').status_code != 200)
+        # logout redirects to login after loging out user
+        response = c.post('/nautilus/logout')
+        self.assertTrue(response.status_code == 302)
+        self.assertIn('/nautilus/login', response.url)
 
+        self.assertTrue(c.post('/nautilus/login').status_code == 200)
 
 class TestQueries(TransactionTestCase):
     databases = {'default', 'datawarehouse'}
@@ -107,11 +190,10 @@ class TestQueries(TransactionTestCase):
         for row in json_dm_especialitats:
             cursor.execute(sql_dm_especialitats, row)
 
-        sql_dm2_newpatient_per_month_agenda = ("INSERT INTO dm2_newpatient_per_month_agenda (`f_month`, `f_monthname`, `f_idAgenda`, `f_nomAgenda`, `f_idEspecialitat`, `f_nomEspecialitat`, `f_newPatients`) VALUES (%(f_month)s, %(f_monthname)s, %(f_idAgenda)s, %(f_nomAgenda)s, %(f_idEspecialitat)s, %(f_nomEspecialitat)s, %(f_newPatients)s);")
-        json_dm2_newpatient_per_month_agenda = json.load(open('test/dm2_newpatient_per_month_agenda.json'))
-        self.dm_dm2_newpatient_per_month_agenda_count = len(json_dm2_newpatient_per_month_agenda)
-        for row in json_dm2_newpatient_per_month_agenda:
-            cursor.execute(sql_dm2_newpatient_per_month_agenda, row)
+        sql_dm2_stats_per_month = "INSERT INTO dm2_stats_per_month (`f_month`, `f_monthname`, `f_patients`, `f_new_patients`, `f_casuals`, `f_fidelitzats`, `f_visits_casuals`, `f_visits_fidelitzats`, `f_visits`, `f_inc_visits`, `f_inc_patients`, `f_inc_new_patients`, `f_inc_casuals`, `f_inc_fidelitzats`, `f_inc_visits_casuals`, `f_inc_visits_fidelitzats`) VALUES (%(f_month)s, %(f_monthname)s, %(f_patients)s, %(f_new_patients)s, %(f_casuals)s, %(f_fidelitzats)s, %(f_visits_casuals)s, %(f_visits_fidelitzats)s, %(f_visits)s, %(f_inc_visits)s, %(f_inc_patients)s, %(f_inc_new_patients)s, %(f_inc_casuals)s, %(f_inc_fidelitzats)s, %(f_inc_visits_casuals)s, %(f_inc_visits_fidelitzats)s)"
+        json_dm2_stats_per_month = json.load(open('test/dm2_stats_per_month.json'))
+        for row in json_dm2_stats_per_month:
+            cursor.execute(sql_dm2_stats_per_month, row)
 
     def tearDown(self):
         # get cursor to datawarehouse db
@@ -132,7 +214,7 @@ class TestQueries(TransactionTestCase):
         month_list = q.get_month_list()
         # manually calc expected value from db
         cursor = connections['datawarehouse'].cursor()
-        cursor.execute('SELECT COUNT(DISTINCT(f_month)) FROM dm2_newpatient_per_month_agenda')
+        cursor.execute('SELECT COUNT(DISTINCT(f_month)) FROM dm2_stats_per_month')
         month_array_db = cursor.fetchone()[0]
         self.assertTrue(len(month_list) == month_array_db)
         self.assertTrue(len(month_array) == month_array_db)
@@ -156,10 +238,10 @@ class TestQueries(TransactionTestCase):
         year_array = q.get_Years()
         # manually calc expected value from db
         cursor = connections['datawarehouse'].cursor()
-        cursor.execute('SELECT COUNT(DISTINCT(LEFT(f_month,4))) FROM dm2_newpatient_per_month_agenda')
+        cursor.execute('SELECT COUNT(DISTINCT(LEFT(f_month,4))) FROM dm2_stats_per_month')
         year_array_db = cursor.fetchone()[0]
         self.assertTrue(len(year_array) == year_array_db)
-"""
+
 
 class TestPlots(TransactionTestCase):
     databases = {'default', 'datawarehouse'}

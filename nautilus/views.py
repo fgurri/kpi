@@ -1,17 +1,54 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import datetime
 import dateutil.relativedelta
+from django.contrib.auth.decorators import login_required
 
 import nautilus.plots as p
 import nautilus.queries as q
 import nautilus.utils as u
+import kpi.settings as s
+from nautilus.authentication import ActiveDirectoryBackend as adb
+from django.contrib.auth import login, logout
+
+def login_form(request):
+     # check if we have an autentification request
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    messages = {}
+    if username and password:
+        user = adb.nautilus_authenticate(username, password)
+        if user is not None:
+            if s.NAUTILUS_REQUIRE_EXTERNAL_PERMISION:
+                # we have a valid LDAP user, check if it allowed
+                if q.is_user_allowed(username):
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                    return redirect('')
+                else:
+                    messages['message'] = "Login correcte però no té permisos per accedir a aquesta aplicació"
+            else:
+                # all authentified users are allowed
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return redirect('')
+        else:
+            messages['message'] = "Login incorrecte. Recordi que és el mateix usuari i contrasenya amb el que ha accedit a l'ordinador."
+    return render(request, 'login.html', messages)
 
 
+@login_required
+def logout_form(request):
+    # check if we have an autentification request
+    if request.user is not None:
+        logout(request)
+    return redirect('login')
+
+
+@login_required
 def info(request):
     return render(request, 'panelInfo.html', {'load_array': q.get_last_loads(5),
                                             'agendas_list': q.get_Agendas()})
 
 
+@login_required
 def dashboard(request):
     now = datetime.datetime.now() + dateutil.relativedelta.relativedelta(months=-1)
     last_month = str(now.year) + str(now.month).zfill(2)
@@ -30,12 +67,14 @@ def dashboard(request):
         'plot_distribution_new_patients_per_spec': p.plot_distribution_new_patients_per_spec(last_month, last_month)})
 
 
+@login_required
 def plot_visits_per_month(request):
     return render(request, 'plot.html', {'plotdiv': p.plot_visits_per_month(),
                                         'footer': 'Número de visites al centre agrupat per mes.',
                                         'heading': 'Total visites > Evolució'})
 
 
+@login_required
 def plot_visits_per_patient(request):
     footer = '<p>Distribució del número de visites per pacient.</p>'
     footer = footer + '<p>Per facilitar la visualització de les dades, els pacients amb més de 50 visites s\'han agrupat tots en el grup de 50 visites.</p>'
@@ -44,12 +83,14 @@ def plot_visits_per_patient(request):
                                         'heading': 'Fidelització > Distribució número de visites per pacient'})
 
 
+@login_required
 def plot_casual_vs_fidelizied(request):
     plotdiv_patients, plotdiv_visits = p.plot_distribution_casual_vs_fidelizied()
     return render(request, 'casualvsFidelizied.html', {'plotdiv_patients': plotdiv_patients,
                                                         'plotdiv_visits': plotdiv_visits})
 
 
+@login_required
 def plot_distance_to_lastmonth(request):
     footer = '<p></p>'
     return render(request, 'plot.html', {'plotdiv': p.plot_distance_to_lastmonth(),
@@ -57,6 +98,7 @@ def plot_distance_to_lastmonth(request):
                                         'heading': 'Fidelització > Conteig mesos des de última visita'})
 
 
+@login_required
 def plot_last_visits_per_month(request):
     footer = '<p>Número de últimes visites al centre agrupat per mes.</p>'
     footer = footer + '<p><ul>Mètode de càlcul:'
@@ -70,6 +112,7 @@ def plot_last_visits_per_month(request):
                                         'heading': 'Fidelització > Conteig últimes visites'})
 
 
+@login_required
 def plot_visits_per_month_speciality(request):
     id_speciality = request.POST.get('id_speciality')
     if id_speciality is None:
@@ -81,6 +124,7 @@ def plot_visits_per_month_speciality(request):
         'plotdiv': p.plot_visits_per_month_speciality(p_id_especiality=id_speciality)})
 
 
+@login_required
 def plot_visits_per_month_agenda(request):
     id_agenda = request.POST.get('id_agenda')
     if id_agenda is None:
@@ -91,6 +135,7 @@ def plot_visits_per_month_agenda(request):
         'plotdiv': p.plot_visits_per_month_speciality(p_id_agenda=id_agenda)})
 
 
+@login_required
 def plot_visits_per_speciality(request):
     monthini = request.POST.get('monthini')
     monthfinal = request.POST.get('monthfinal')
@@ -105,6 +150,7 @@ def plot_visits_per_speciality(request):
                                                             'listMonths': q.get_Months()})
 
 
+@login_required
 def plot_new_patients_per_speciality(request):
     monthini = request.POST.get('monthini')
     monthfinal = request.POST.get('monthfinal')
@@ -124,6 +170,7 @@ def plot_new_patients_per_speciality(request):
                                                             'currYear': str(currYear)})
 
 
+@login_required
 def plot_new_patients_evolution_per_speciality(request):
     id_speciality = request.POST.get('id_speciality')
     if id_speciality is None:
@@ -134,6 +181,7 @@ def plot_new_patients_evolution_per_speciality(request):
         'plotdiv': p.plot_evolution_new_patients_per_spec(p_id_especiality=id_speciality)})
 
 
+@login_required
 def plot_new_patients_per_speciality_slider(request):
     rangevalue = request.POST.get('rangevalues')
     if rangevalue is None:
@@ -159,10 +207,12 @@ def plot_new_patients_per_speciality_slider(request):
                                                             'sliderdict': sliderdict})
 
 
+@login_required
 def plot_new_patients_per_speciality_per_month(request):
     return render(request, 'newPatientsSpecialityMonth.html', {'plotdiv': p.plot_new_patients_per_speciality_per_month()})
 
 
+@login_required
 def plot_first_blood_per_agenda(request):
     monthini = request.POST.get('monthini')
     monthfinal = request.POST.get('monthfinal')
@@ -183,6 +233,7 @@ def plot_first_blood_per_agenda(request):
                                                             'currYear': str(currYear)})
 
 
+@login_required
 def plot_first_blood_per_agenda_by_spec(request):
     monthini = request.POST.get('monthini')
     monthfinal = request.POST.get('monthfinal')
@@ -208,6 +259,7 @@ def plot_first_blood_per_agenda_by_spec(request):
                                                             'currYear': str(currYear)})
 
 
+@login_required
 def plot_month_frequency_by_agenda(request):
     id_agenda = request.POST.get('id_agenda')
     if id_agenda is None:

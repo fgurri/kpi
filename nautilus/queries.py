@@ -8,6 +8,7 @@ import numpy as np
 
 import nautilus.utils as u
 from nautilus.models import Cell
+import kpi.settings as s
 
 
 """ Generates an array of all specialities
@@ -102,7 +103,7 @@ def get_Months():
         connection = connections['datawarehouse']
         cursor = connection.cursor()
         cursor.execute(
-            'SELECT distinct f_month, CONCAT(LEFT(f_month, 4), \'-\', f_monthname) from dm2_newpatient_per_month_agenda order by f_month'
+            'SELECT distinct f_month, CONCAT(LEFT(f_month, 4), \'-\', f_monthname) from dm2_stats_per_month order by f_month'
         )
         rows = cursor.fetchall()
         lines = []
@@ -137,7 +138,7 @@ def get_month_list():
         connection = connections['datawarehouse']
         cursor = connection.cursor()
         cursor.execute(
-            'SELECT distinct f_month from dm2_newpatient_per_month_agenda order by f_month'
+            'SELECT distinct f_month from dm2_stats_per_month order by f_month'
         )
         monthlist = [item[0] for item in cursor.fetchall()]
         return monthlist
@@ -433,6 +434,22 @@ def get_last_loads(p_num_loads):
             line = {}
         return lines
 
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+    finally:
+        cursor.close()
+
+"""
+    Looksup in intranet database to check wether the user is allowed to
+    access the app
+"""
+def is_user_allowed(username):
+    connection = connections['intranet']
+    try:
+        cursor = connection.cursor()
+        cursor.execute('SELECT users FROM apps WHERE id = ' + str(s.NAUTILUS_INTRANET_APP_ID))
+        users = cursor.fetchone()[0]
+        return username in users
     except Error as e:
         print("Error while connecting to MySQL", e)
     finally:

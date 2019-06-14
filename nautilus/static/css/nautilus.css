@@ -37,3 +37,21 @@
     font-weight: bold;
     color: red;
 }
+
+.panel-login {
+    position: absolute;
+    width: 350px;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: rgba(255,255,255,1);
+}
+
+.container-login {
+    height: 100%;
+    width: 100%;
+    background-image: url("../img/background.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

@@ -1,0 +1,48 @@
+{% load static %}
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>MIgatzem</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/nautilus.css' %}">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+    </head>
+    <body>
+    <div class="container container-login">
+        <div class="container panel-login">
+        <div class="col-md-4">
+            <form method="POST" action="login">{% csrf_token %}
+                <table class="table table-responsive">
+                    <tr>
+                        <td colspan="100%" class="text-center"><img src="{% static 'images/logoCreuGroga.jpg' %}"/></td>
+                    </tr>
+                    {% if message %}
+                        <tr>
+                            <td colspan="100%"><p class="alert alert-danger" role="alert">{{message}}</p></td>
+                        </tr>
+                    {% endif %}
+
+                    <tr>
+                        <td colspan="100%">Introdueixi usuari i contrasenya del domini</td>
+                    </tr>
+                    <tr>
+                        <td>Usuari</td>
+                        <td><input type="text" id="username" name="username" /></td>
+                    </tr>
+                    <tr>
+                        <td>Password</td>
+                        <td><input type="password" id="password" name="password" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan="100%" class="text-center">
+                            <button type="submit" title="Guardar">login</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

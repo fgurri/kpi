@@ -18,5 +18,7 @@ urlpatterns = [
     path('vpp', views.plot_visits_per_patient, name='vpp'),
     path('pcpf', views.plot_casual_vs_fidelizied, name='pcpf'),
     path('dtlv', views.plot_distance_to_lastmonth, name='dtlv'),
-    path('info', views.info, name='info')
+    path('info', views.info, name='info'),
+    path('login', views.login_form, name='login'),
+    path('logout', views.logout_form, name='logout'),
 ]
