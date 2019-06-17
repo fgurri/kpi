@@ -15,11 +15,6 @@ import dateutil.relativedelta
 import nautilus.utils as u
 import nautilus.queries as q
 
-
-# read properties on project root
-config = configparser.RawConfigParser()
-config.read(r'nautilus.properties')
-
 """ Generates a offline plotly plot with the graph 'total visits per month'.
     Return HTML div code that builds the graph. It is necessary to include 'plotly.js'
     in your html file.
