@@ -145,8 +145,8 @@ def plot_visits_per_speciality(request):
         monthini = last_month
         monthfinal = last_month
     return render(request, 'visitsSpeciality.html', {'plotdiv': p.plot_distribution_visits_per_speciality(monthini, monthfinal),
-                                                            'monthini': monthini,
-                                                            'monthfinal': monthfinal,
+                                                            'monthini': int(monthini),
+                                                            'monthfinal': int(monthfinal),
                                                             'listMonths': q.get_Months()})
 
 
@@ -163,8 +163,8 @@ def plot_new_patients_per_speciality(request):
         monthfinal = last_month
 
     return render(request, 'newPatientsSpeciality.html', {'plotdiv': p.plot_distribution_new_patients_per_spec(monthini, monthfinal),
-                                                            'monthini': monthini,
-                                                            'monthfinal': monthfinal,
+                                                            'monthini': int(monthini),
+                                                            'monthfinal': int(monthfinal),
                                                             'listMonths': q.get_Months(),
                                                             'listYears': q.get_Years(),
                                                             'currYear': str(currYear)})
@@ -226,8 +226,8 @@ def plot_first_blood_per_agenda(request):
         monthfinal = last_month
 
     return render(request, 'firstBloodPerAgenda.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal),
-                                                            'monthini': monthini,
-                                                            'monthfinal': monthfinal,
+                                                            'monthini': int(monthini),
+                                                            'monthfinal': int(monthfinal),
                                                             'listMonths': q.get_Months(),
                                                             'listYears': q.get_Years(),
                                                             'currYear': str(currYear)})
@@ -250,8 +250,8 @@ def plot_first_blood_per_agenda_by_spec(request):
         monthfinal = last_month
 
     return render(request, 'firstBloodPerAgendaBySpec.html', {'plotdiv': p.plot_first_blood_per_agenda(monthini, monthfinal, p_id_especiality=id_speciality),
-                                                            'monthini': monthini,
-                                                            'monthfinal': monthfinal,
+                                                            'monthini': int(monthini),
+                                                            'monthfinal': int(monthfinal),
                                                             'listMonths': q.get_Months(),
                                                             'listSpecialities': q.get_Specialities(),
                                                             'id_speciality': id_speciality,

@@ -20,10 +20,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '33a-qg@x#hi($yzmd(!5l&k69fudb=ie-lt#au$vq-pa$xwam^'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -82,17 +82,17 @@ DATABASES = {
     },
     'datawarehouse': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'datawarehouse',
-        'USER': 'datawarehouse',
-        'PASSWORD': 'warehouse08',
-        'HOST': 'localhost',
+        'NAME': os.environ['DWH_DATABASE'],
+        'USER': os.environ['DWH_USERNAME'],
+        'PASSWORD': os.environ['DWH_PASSWORD'],
+        'HOST': os.environ['DWH_HOST'],
     },
     'intranet': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'intranet',
-        'USER': 'datawarehouse',
-        'PASSWORD': 'warehouse08',
-        'HOST': '10.44.2.18',
+        'NAME': os.environ['INTRANET_DATABASE'],
+        'USER': os.environ['DWH_USERNAME'],
+        'PASSWORD': os.environ['DWH_PASSWORD'],
+        'HOST': os.environ['INTRANET_HOST'],
     }
 }
 
@@ -147,6 +147,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'nautilus/static'),
 ]
+
+# expire session on browser close
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # django_python3_ldap settings
 
