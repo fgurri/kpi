@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block scripts %}
+    <script language="javascript">
+
+        function last_month() {
+            document.getElementById("date_ini").value = "{{start_previous_month}}";
+            document.getElementById("date_fin").value = "{{end_previous_month}}";
+        }
+
+        function last_week() {
+            document.getElementById("date_ini").value = "{{start_previous_week}}";
+            document.getElementById("date_fin").value = "{{end_previous_week}}";
+        }
+
+        function yesterday() {
+            document.getElementById("date_ini").value = "{{yesterday}}";
+            document.getElementById("date_fin").value = "{{yesterday}}";
+        }
+
+        function today() {
+            document.getElementById("date_ini").value = "{{today}}";
+            document.getElementById("date_fin").value = "{{today}}";
+        }
+
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Call center > Analisi de periode
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-10">
+                    <form action="ccpf" method="POST" id="form_range">{% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="control-label">Data inici:</label>
+                            <div class="input-group datepick">
+                               <div class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </div>
+                                <input type="text" class="form-control" name="date_ini" id="date_ini" placeholder="trii en el calendari"  value="{{date_ini}}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="control-label">Data final:</label>
+                            <div class="input-group datepick">
+                                <div class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </div>
+                                <input type="text" class="form-control" name="date_fin" id="date_fin" placeholder="trii en el calendari" value="{{date_fin}}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <input type="submit" id="btnsubmit" value="generar gràfica" class="btn btn-primary"/>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label for="monthfinal">Accessos directes:</label>
+                                <button class="btn" onclick="javascript:today()">Avui</button>
+                                <button class="btn" onclick="javascript:yesterday()">Ahir</button>
+                                <button class="btn" onclick="javascript:last_week()">Última setmana</button>
+                                <button class="btn" onclick="javascript:last_month()">Últim mes</button>
+                            </div>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+                <div class="row">
+                    {{ plot_distrib|safe }}
+                </div>
+                <div class="row">
+                    {{ plot_abs_values|safe}}
+                </div>
+            </div>
+            <div class="panel-footer">
+            </div>
+        </div>
+    </div>
+{% endblock %}

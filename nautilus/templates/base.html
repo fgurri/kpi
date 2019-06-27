@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Groga Submarine</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
@@ -14,6 +15,9 @@
     <script src="{% static 'js/bootstrap-slider.min.js' %}"></script>
     <script src="{% static 'js/custom.jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'js/binomi-utils.js' %}"></script>
+    <script language="javascript" src="{% static 'js/moment.js' %}"></script>
+    <script language="javascript" src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/bootstrap-datetimepicker.min.css' %}">
     {% block scripts %}{% endblock %}
 </head>
 <body>
@@ -54,6 +58,12 @@
                     <li><a href="dtlv"><span class="fas fa-chart-bar">&nbsp;Conteig mesos des de última visita</span></a></li>
                   </ul>
                 </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="fas fa-phone">&nbsp;Call center</span><span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="ccpf"><span class="fas fa-calendar-alt">&nbsp;Análisi de periode</span></a></li>
+                  </ul>
+                </li>
                 <li ><a href="info"><span class="fas fa-info">&nbsp;Info</span></a></li>
               </ul>
               <ul class="nav navbar-nav navbar-right">
@@ -74,6 +84,15 @@
       $(document).ready(function() {
         $('.table-dataTable').DataTable({
           order : [ [ 0, "asc" ] ]
+        });
+
+        moment.updateLocale('en', {
+          week: { dow: 1 } // Monday is the first day of the week
+        });
+
+        $('.datepick').datetimepicker({
+          format: 'DD/MM/YYYY',
+          ignoreReadonly: true
         });
       });
   </script>

@@ -957,3 +957,87 @@ def plot_distance_to_lastmonth():
 
     except Error as e:
         print("Error while connecting to MySQL", e)
+
+
+"""
+"""
+def plots_callcenter_period (p_date_ini, p_date_fin):
+    try:
+
+        connection = connections['datawarehouse']
+        # format date to use in a between condition: YYYYMMDD
+        date_ini = datetime.datetime.strptime(str(p_date_ini), "%d/%m/%Y").strftime("%Y/%m/%d")
+        date_fin = datetime.datetime.strptime(str(p_date_fin), "%d/%m/%Y").strftime("%Y/%m/%d")
+        sql = "SELECT f_hour, sum(f_total) as total, sum(f_answered) as answered, sum(f_not_answered) as not_answered, round(100*sum(f_not_answered)/sum(f_total)) as percent_not_answered FROM dm3_callcenter_general WHERE f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_dst_id='6000' and f_hour between '07' and '23' GROUP BY f_hour ORDER BY f_hour ASC"
+        df = pd.read_sql(sql, connection)
+
+        if df.empty:
+            return "No hi han dades en el periode triat.", "No hi han dades en el periode triat."
+
+        trace_answered = go.Scatter(x=df['f_hour'],
+                            y=df['answered'],
+                            mode='lines',
+                            name='Contestades',
+                            stackgroup='one',
+                            fillcolor='#81d386',
+                            line = dict(
+                                color = ('#81d386'),),
+                            hovertemplate = '%{y:.2f}%',
+                            groupnorm='percent')
+
+        trace_not_answered = go.Scatter(x=df['f_hour'],
+                            y=df['not_answered'],
+                            mode='lines',
+                            name='No contestades',
+                            hovertemplate = '%{y:.2f}%',
+                            line = dict(
+                                color = ('#f28282'),),
+                            fillcolor= '#f28282',
+                            stackgroup='one')
+
+        graph_title = 'Distribució contestades vs no contestades (Del '+ str(p_date_ini) + ' al '+ str(p_date_fin) + ')'
+        data = [trace_answered, trace_not_answered]
+        layout = go.Layout(
+            title=graph_title,
+            titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
+            showlegend=True,
+            xaxis=dict(
+                showticklabels=True,
+                ticksuffix='h',
+                tickfont=dict(family='Old Standard TT, serif',
+                                     size=14,
+                                     color='black'),
+                tickmode='linear',
+            ),
+            yaxis=dict(type='linear',
+                    range=[1, 100],
+                    dtick=20,
+                    ticksuffix='%')
+            )
+        fig = go.Figure(data=data, layout=layout)
+        plot_distrib = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        trace_abs_lost_calls = go.Bar(x=df['f_hour'],
+                        y=df['not_answered'],
+                        name='total no agafades')
+        layout = go.Layout(
+            title='Quantitat trucades no agafades',
+            titlefont=dict(family='Arial, sans-serif', size=24, color='green'),
+            showlegend=True,
+            xaxis=dict(
+                showticklabels=True,
+                ticksuffix='h',
+                tickfont=dict(family='Old Standard TT, serif',
+                                     size=14,
+                                     color='black'),
+                tickmode='linear',
+            ),
+            )
+        data=[trace_abs_lost_calls]
+        fig = go.Figure(data=data, layout=layout)
+        plot_abs_values = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        return plot_distrib, plot_abs_values
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)

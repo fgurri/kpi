@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.environ['SECRET_KEY']
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -132,7 +132,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
@@ -141,6 +140,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'nautilus/static'),
 ]
+
+# if DEBUG:
+#   STATIC_ROOT = os.path.join(BASE_DIR, '/static')
+# else:
+#   STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# url for colectstatic
+# STATIC_ROOT = 'D:/software/bi'
 
 # expire session on browser close
 

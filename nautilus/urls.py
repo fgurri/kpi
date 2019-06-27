@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+import django.views.static
+#import kpi.settings as s
 
 urlpatterns = [
     path('', views.dashboard, name=''),
@@ -21,4 +23,9 @@ urlpatterns = [
     path('info', views.info, name='info'),
     path('login', views.login_form, name='login'),
     path('logout', views.logout_form, name='logout'),
+    path('ccpf', views.cc_period_performance, name='ccpf'),
 ]
+
+#urlpatterns += [
+#   path(r'^static/(?P<path>.*)$', django.views.static.serve, {'document_root': s.STATIC_ROOT, 'show_indexes': s.DEBUG})
+#]

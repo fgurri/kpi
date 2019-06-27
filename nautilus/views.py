@@ -1,14 +1,17 @@
 from django.shortcuts import render, redirect
 import datetime
-import dateutil.relativedelta
+import dateutil
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout
 
 import nautilus.plots as p
 import nautilus.queries as q
 import nautilus.utils as u
 import kpi.settings as s
 from nautilus.authentication import ActiveDirectoryBackend as adb
-from django.contrib.auth import login, logout
+
 
 def login_form(request):
      # check if we have an autentification request
@@ -268,3 +271,36 @@ def plot_month_frequency_by_agenda(request):
     return render(request, 'frequencyByAgenda.html', {'listAgendas': q.get_Agendas(),
                                                         'id_agenda': id_agenda,
                                                         'plotdiv': p.plot_frequency_per_agenda(id_agenda)})
+
+@login_required
+def cc_period_performance(request):
+    date_ini = request.POST.get('date_ini')
+    date_fin = request.POST.get('date_fin')
+    today = datetime.date.today()
+    previous_month = today - relativedelta(months=1)
+    start_previous_month = date(previous_month.year, previous_month.month, 1).strftime("%d/%m/%Y")
+    end_previous_month = date(today.year, today.month, 1) - relativedelta(days=1)
+    end_previous_month = end_previous_month.strftime("%d/%m/%Y")
+    start_previous_week = today + datetime.timedelta(-today.weekday(), weeks=-1)
+    start_previous_week = start_previous_week.strftime("%d/%m/%Y")
+    end_previous_week = today + datetime.timedelta(-today.weekday() - 1)
+    end_previous_week = end_previous_week.strftime("%d/%m/%Y")
+    yesterday = today -relativedelta(days=1)
+    today = today.strftime("%d/%m/%Y")
+    yesterday = yesterday.strftime("%d/%m/%Y")
+
+    if not date_ini or not date_fin:
+        date_ini = today
+        date_fin = today
+
+    plot_distrib, plot_abs_values =  p.plots_callcenter_period(date_ini, date_fin)
+    return render(request, 'callcenter_period_performance.html',{'plot_distrib': plot_distrib,
+                                                            'plot_abs_values': plot_abs_values,
+                                                            'date_ini': date_ini,
+                                                            'date_fin': date_fin,
+                                                            'today': today,
+                                                            'yesterday': yesterday,
+                                                            'start_previous_month': start_previous_month,
+                                                            'end_previous_month': end_previous_month,
+                                                            'start_previous_week': start_previous_week,
+                                                            'end_previous_week': end_previous_week})

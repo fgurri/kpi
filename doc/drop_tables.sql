@@ -11,3 +11,7 @@ DROP TABLE `dm_especialitats`;
 DROP TABLE `dm_first_visit`;
 
 DROP TABLE `dm_load_log`;
+
+DROP TABLE `dm3_callcenter_general`;
+
+DROP TABLE `dm3_callcenter_per_extension`;

@@ -699,6 +699,244 @@
     </hop>
   </order>
   <step>
+    <name>Add previous values</name>
+    <type>AnalyticQuery</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <group>
+      </group>
+    <fields>
+      <field>
+        <aggregate>prev_visits</aggregate>
+        <subject>visits</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+      <field>
+        <aggregate>prev_visits_casual</aggregate>
+        <subject>visits_casuals</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+      <field>
+        <aggregate>prev_visits_fid</aggregate>
+        <subject>visits_fidelitzats</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+      <field>
+        <aggregate>prev_patients</aggregate>
+        <subject>patients</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+      <field>
+        <aggregate>prev_casuals</aggregate>
+        <subject>casuals</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+      <field>
+        <aggregate>prev_fid</aggregate>
+        <subject>fidelitzats</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+      <field>
+        <aggregate>prev_new_pat</aggregate>
+        <subject>new_patients</subject>
+        <type>LAG</type>
+        <valuefield>1</valuefield>
+      </field>
+    </fields>
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>928</xloc>
+      <yloc>80</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Calc increments inter-months</name>
+    <type>Calculator</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <calculation>
+      <field_name>inc_visites</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>visits</field_a>
+      <field_b>prev_visits</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>inc_patients</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>patients</field_a>
+      <field_b>prev_patients</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>inc_casuals</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>casuals</field_a>
+      <field_b>prev_casuals</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>inc_fid</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>fidelitzats</field_a>
+      <field_b>prev_fid</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>inc_visits_casuals</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>visits_casuals</field_a>
+      <field_b>prev_visits_casual</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>inc_visits_fid</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>visits_fidelitzats</field_a>
+      <field_b>prev_visits_fid</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>inc_new_patients</field_name>
+      <calc_type>SUBTRACT</calc_type>
+      <field_a>new_patients</field_a>
+      <field_b>prev_new_pat</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1072</xloc>
+      <yloc>80</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Calc visits</name>
+    <type>Calculator</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <calculation>
+      <field_name>visits</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>visits_casuals</field_a>
+      <field_b>visits_fidelitzats</field_b>
+      <field_c />
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>816</xloc>
+      <yloc>80</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
     <name>Cut YYYYMM</name>
     <type>StringCut</type>
     <description />
@@ -1317,6 +1555,51 @@ HAVING initpatient.mes &lt; CONCAT(YEAR(CURRENT_DATE()), LPAD(MONTH(CURRENT_DATE
     <GUI>
       <xloc>384</xloc>
       <yloc>160</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Nuls a 0</name>
+    <type>IfNull</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <replaceAllByValue>0</replaceAllByValue>
+    <replaceAllMask />
+    <selectFields>N</selectFields>
+    <selectValuesType>Y</selectValuesType>
+    <setEmptyStringAll>N</setEmptyStringAll>
+    <valuetypes>
+      <valuetype>
+        <name>Integer</name>
+        <value>0</value>
+        <mask />
+        <set_type_empty_string>N</set_type_empty_string>
+      </valuetype>
+      <valuetype>
+        <name>String</name>
+        <value>''</value>
+        <mask />
+        <set_type_empty_string>N</set_type_empty_string>
+      </valuetype>
+    </valuetypes>
+    <fields>
+      </fields>
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1184</xloc>
+      <yloc>96</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -2718,289 +3001,6 @@ HAVING initpatient.mes &lt; CONCAT(YEAR(CURRENT_DATE()), LPAD(MONTH(CURRENT_DATE
     <GUI>
       <xloc>384</xloc>
       <yloc>496</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Add previous values</name>
-    <type>AnalyticQuery</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <group>
-      </group>
-    <fields>
-      <field>
-        <aggregate>prev_visits</aggregate>
-        <subject>visits</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-      <field>
-        <aggregate>prev_visits_casual</aggregate>
-        <subject>visits_casuals</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-      <field>
-        <aggregate>prev_visits_fid</aggregate>
-        <subject>visits_fidelitzats</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-      <field>
-        <aggregate>prev_patients</aggregate>
-        <subject>patients</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-      <field>
-        <aggregate>prev_casuals</aggregate>
-        <subject>casuals</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-      <field>
-        <aggregate>prev_fid</aggregate>
-        <subject>fidelitzats</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-      <field>
-        <aggregate>prev_new_pat</aggregate>
-        <subject>new_patients</subject>
-        <type>LAG</type>
-        <valuefield>1</valuefield>
-      </field>
-    </fields>
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>928</xloc>
-      <yloc>80</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Calc increments inter-months</name>
-    <type>Calculator</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <calculation>
-      <field_name>inc_visites</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>visits</field_a>
-      <field_b>prev_visits</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <calculation>
-      <field_name>inc_patients</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>patients</field_a>
-      <field_b>prev_patients</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <calculation>
-      <field_name>inc_casuals</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>casuals</field_a>
-      <field_b>prev_casuals</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <calculation>
-      <field_name>inc_fid</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>fidelitzats</field_a>
-      <field_b>prev_fid</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <calculation>
-      <field_name>inc_visits_casuals</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>visits_casuals</field_a>
-      <field_b>prev_visits_casual</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <calculation>
-      <field_name>inc_visits_fid</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>visits_fidelitzats</field_a>
-      <field_b>prev_visits_fid</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <calculation>
-      <field_name>inc_new_patients</field_name>
-      <calc_type>SUBTRACT</calc_type>
-      <field_a>new_patients</field_a>
-      <field_b>prev_new_pat</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1072</xloc>
-      <yloc>80</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Calc visits</name>
-    <type>Calculator</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <calculation>
-      <field_name>visits</field_name>
-      <calc_type>ADD</calc_type>
-      <field_a>visits_casuals</field_a>
-      <field_b>visits_fidelitzats</field_b>
-      <field_c />
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask />
-      <decimal_symbol />
-      <grouping_symbol />
-      <currency_symbol />
-    </calculation>
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>816</xloc>
-      <yloc>80</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Nuls a 0</name>
-    <type>IfNull</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <replaceAllByValue>0</replaceAllByValue>
-    <replaceAllMask />
-    <selectFields>N</selectFields>
-    <selectValuesType>Y</selectValuesType>
-    <setEmptyStringAll>N</setEmptyStringAll>
-    <valuetypes>
-      <valuetype>
-        <name>Integer</name>
-        <value>0</value>
-        <mask />
-        <set_type_empty_string>N</set_type_empty_string>
-      </valuetype>
-      <valuetype>
-        <name>String</name>
-        <value>''</value>
-        <mask />
-        <set_type_empty_string>N</set_type_empty_string>
-      </valuetype>
-    </valuetypes>
-    <fields>
-      </fields>
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1184</xloc>
-      <yloc>96</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
