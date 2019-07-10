@@ -81,20 +81,24 @@ CREATE TABLE `dm_load_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `dm3_callcenter_general` (
+  `f_month` int(11) DEFAULT NULL,
   `f_year` int(11) DEFAULT NULL,
-  `f_month` varchar(20) DEFAULT NULL,
+  `f_month_name` varchar(20) DEFAULT NULL,
   `f_day` varchar(20) DEFAULT NULL,
+  `f_week_day_order` int(11) DEFAULT NULL,
   `f_week_day` varchar(45) DEFAULT NULL,
   `f_hour` varchar(2) DEFAULT NULL,
-  `f_destination` varchar(45) DEFAULT NULL,
+  `f_dst_id` varchar(45) DEFAULT NULL,
+  `f_dst_name` varchar(45) DEFAULT NULL,
   `f_total` int(11) DEFAULT NULL,
   `f_answered` int(11) DEFAULT NULL,
   `f_not_answered` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `dm3_callcenter_per_extension` (
-  `f_year` int(11) NOT NULL,
-  `f_month` varchar(20) DEFAULT NULL,
+  `f_month` int(11) DEFAULT NULL,
+  `f_year` int(11) DEFAULT NULL,
+  `f_month_name` varchar(20) DEFAULT NULL,
   `f_day` varchar(20) DEFAULT NULL,
   `f_week_day` varchar(45) DEFAULT NULL,
   `f_hour` varchar(2) DEFAULT NULL,

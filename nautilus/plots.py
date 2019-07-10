@@ -959,7 +959,16 @@ def plot_distance_to_lastmonth():
         print("Error while connecting to MySQL", e)
 
 
-"""
+""" Callcenter plots to analyse performance.
+    usage::
+
+        >>> import plots
+        >>> plots = plots_callcenter_period('2018/01/01', '2018/01/31')
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot[1]})
+
+    :param p_date_ini: string representation of starting date in YYYY/MM/DD format
+    :param p_date_fin: string representation of ending date in YYYY/MM/DD format
+    :rtype: array of plots
 """
 def plots_callcenter_period (p_date_ini, p_date_fin):
     try:
@@ -968,11 +977,11 @@ def plots_callcenter_period (p_date_ini, p_date_fin):
         # format date to use in a between condition: YYYYMMDD
         date_ini = datetime.datetime.strptime(str(p_date_ini), "%d/%m/%Y").strftime("%Y/%m/%d")
         date_fin = datetime.datetime.strptime(str(p_date_fin), "%d/%m/%Y").strftime("%Y/%m/%d")
-        sql = "SELECT f_hour, sum(f_total) as total, sum(f_answered) as answered, sum(f_not_answered) as not_answered, round(100*sum(f_not_answered)/sum(f_total)) as percent_not_answered FROM dm3_callcenter_general WHERE f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_dst_id='6000' and f_hour between '07' and '23' GROUP BY f_hour ORDER BY f_hour ASC"
+        sql = "SELECT f_hour, sum(f_total) as total, sum(f_answered) as answered, sum(f_not_answered) as not_answered, if(sum(f_answered)>0,sum(f_not_answered)/sum(f_answered),sum(f_not_answered)) as overcall_factor FROM dm3_callcenter_general WHERE f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_dst_id='6000' and f_hour between '07' and '23' GROUP BY f_hour ORDER BY f_hour ASC"
         df = pd.read_sql(sql, connection)
 
         if df.empty:
-            return "No hi han dades en el periode triat.", "No hi han dades en el periode triat."
+            return "No hi han dades en el periode triat.", None, None, None, None, None
 
         trace_answered = go.Scatter(x=df['f_hour'],
                             y=df['answered'],
@@ -995,7 +1004,7 @@ def plots_callcenter_period (p_date_ini, p_date_fin):
                             fillcolor= '#f28282',
                             stackgroup='one')
 
-        graph_title = 'Distribució contestades vs no contestades (Del '+ str(p_date_ini) + ' al '+ str(p_date_fin) + ')'
+        graph_title = 'Distribució contestades vs no contestades'
         data = [trace_answered, trace_not_answered]
         layout = go.Layout(
             title=graph_title,
@@ -1037,7 +1046,347 @@ def plots_callcenter_period (p_date_ini, p_date_fin):
         fig = go.Figure(data=data, layout=layout)
         plot_abs_values = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
 
-        return plot_distrib, plot_abs_values
+        df = pd.read_sql("select f_week_day_order, f_week_day, f_hour, sum(f_not_answered) as not_answered, sum(f_total) as total from dm3_callcenter_general where f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_dst_id='6000' and f_hour between '07' and '22' group by f_week_day_order, f_week_day, f_hour order by f_week_day_order ASC, f_hour ASC", connection)
 
+        days = df['f_week_day'].unique()
+        hours = sorted(df['f_hour'].unique())
+        values = []
+        for hour in hours:
+            line = []
+            for day in days:
+                v = df.loc[(df['f_week_day'] == day) & (df['f_hour'] == hour), 'not_answered'].values
+                if v.size >0:
+                    line.append(v[0])
+                else:
+                    line.append(0)
+            values.append(line)
+
+        trace_heatmap_no_answer = go.Heatmap(z=values, x=days, y=hours, colorscale='Reds')
+        data = [trace_heatmap_no_answer]
+        layout = go.Layout(
+            title='No contestades (valor absolut)',
+            titlefont=dict(family='Arial, sans-serif',
+                           size=24,
+                           color='green'),
+            yaxis=dict(
+                    showticklabels=True,
+                    ticksuffix='h',
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    tickmode='linear',
+                ),
+            )
+        fig = go.Figure(data=data, layout=layout)
+        plot_heatmap_no_answer = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        # total calls
+        total_values = []
+        for hour in hours:
+            line = []
+            for day in days:
+                v = df.loc[(df['f_week_day'] == day) & (df['f_hour'] == hour), 'total'].values
+                if v.size >0:
+                    line.append(v[0])
+                else:
+                    line.append(0)
+            total_values.append(line)
+
+        trace_heatmap_total = go.Heatmap(z=total_values, x=days, y=hours, colorscale='Blues', reversescale=True)
+        data = [trace_heatmap_total]
+        layout = go.Layout(
+            title='Rebudes (valor absolut)',
+            titlefont=dict(family='Arial, sans-serif',
+                           size=24,
+                           color='green'),
+            yaxis=dict(
+                    showticklabels=True,
+                    ticksuffix='h',
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    tickmode='linear',
+                ),
+            )
+        fig = go.Figure(data=data, layout=layout)
+        plot_heatmap_total = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        df = pd.read_sql("select f_day, f_hour, sum(f_not_answered) as not_answered, sum(f_total) as total from dm3_callcenter_general where f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_dst_id='6000' and f_hour between '07' and '22' group by f_day, f_hour order by f_day ASC, f_hour ASC", connection)
+
+        days = df['f_day'].unique()
+        hours = sorted(df['f_hour'].unique())
+        values_day = []
+        values_total = []
+
+        for hour in hours:
+            line = []
+            line_total = []
+            for day in days:
+                v = df.loc[(df['f_day'] == day) & (df['f_hour'] == hour), 'not_answered'].values
+                v_total = df.loc[(df['f_day'] == day) & (df['f_hour'] == hour), 'total'].values
+                if v.size >0:
+                    line.append(v[0])
+                else:
+                    line.append(0)
+                if v_total.size >0:
+                    line_total.append(v_total[0])
+                else:
+                    line_total.append(0)
+            values_day.append(line)
+            values_total.append(line_total)
+        trace_heatmap_per_day_no_answer = go.Heatmap(z=values_day, x=days, y=hours, colorscale='Reds')
+        data = [trace_heatmap_per_day_no_answer]
+        layout = go.Layout(
+            title='No contestades per dia (valor absolut)',
+            titlefont=dict(family='Arial, sans-serif',
+                           size=24,
+                           color='green'),
+            yaxis=dict(
+                    showticklabels=True,
+                    ticksuffix='h',
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    tickmode='linear',
+                ),
+            )
+        fig = go.Figure(data=data, layout=layout)
+        plot_heatmap_per_day_no_answer = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        trace_heatmap_per_day_total = go.Heatmap(z=values_total, x=days, y=hours, colorscale='Blues', reversescale=True)
+        data = [trace_heatmap_per_day_total]
+        layout = go.Layout(
+            title='Rebudes per dia (valor absolut)',
+            titlefont=dict(family='Arial, sans-serif',
+                           size=24,
+                           color='green'),
+            yaxis=dict(
+                    showticklabels=True,
+                    ticksuffix='h',
+                    tickfont=dict(family='Old Standard TT, serif',
+                                         size=14,
+                                         color='black'),
+                    tickmode='linear',
+                ),
+            )
+        fig = go.Figure(data=data, layout=layout)
+        plot_heatmap_per_day_total = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        return plot_distrib, plot_abs_values, plot_heatmap_no_answer, plot_heatmap_total, plot_heatmap_per_day_no_answer, plot_heatmap_per_day_total
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+
+""" Callcenter plots representing evolution
+    usage::
+
+        >>> import plots
+        >>> plots = plots_callcenter_evo()
+        >>> render (request, 'someViewWithPlot.html', {'plot_name': plot[1]})
+
+    :param: None
+    :rtype: array of plots
+"""
+def plots_callcenter_evo():
+    try:
+        connection = connections['datawarehouse']
+        current_month = datetime.date.today().strftime('%Y%m')
+        sql = 'SELECT f_month, sum(f_total) as total, sum(f_answered) as answered, sum(f_not_answered) as not_answered, sum(f_answered)/sum(f_total) as percent_answered, sum(f_not_answered)/sum(f_total) as percent_not_answered FROM datawarehouse.dm3_callcenter_general WHERE f_month < ' + current_month +' GROUP BY f_month ORDER BY f_month ASC'
+
+        df = pd.read_sql(sql, connection)
+        df['f_month_order'] = np.arange(len(df))
+        trace_total = go.Scatter(x=df['f_month_order'],
+                            y=df['total'],
+                            mode='lines',
+                            name='Rebudes per mes',
+                            line = dict(
+                                color = ('blue'),
+                                dash = 'solid'),)
+        trace_answered = go.Scatter(x=df['f_month_order'],
+                            y=df['answered'],
+                            mode='lines',
+                            name='Contestades per mes',
+                            line = dict(
+                                color = ('green'),
+                                dash = 'solid',),)
+        trace_not_answered = go.Scatter(x=df['f_month_order'],
+                            y=df['not_answered'],
+                            mode='lines',
+                            name='No contestades per mes',
+                            line = dict(
+                                color = ('red'),
+                                dash = 'solid',),)
+        linear_x = np.r_[0:len(df)]
+        linear_x = np.arange(0, len(df)).reshape(-1, 1)
+        poly_reg = PolynomialFeatures(degree=4)
+        X_poly = poly_reg.fit_transform(linear_x)
+        pol_reg = LinearRegression()
+        pol_reg.fit(X_poly, df['total'])
+        predicted_y_total = pol_reg.predict(poly_reg.fit_transform(linear_x))
+        pol_reg.fit(X_poly, df['answered'])
+        predicted_y_answered = pol_reg.predict(poly_reg.fit_transform(linear_x))
+        pol_reg.fit(X_poly, df['not_answered'])
+        predicted_y_not_answered = pol_reg.predict(poly_reg.fit_transform(linear_x))
+
+        trace_regression_total = go.Scatter(x=df['f_month_order'],
+                            y=predicted_y_total,
+                            mode='lines',
+                            name='Tendencia trucades rebudes',
+                            line = dict(
+                                color = ('blue'),
+                                dash = 'dot'),)
+        trace_regression_answered = go.Scatter(x=df['f_month_order'],
+                            y=predicted_y_answered,
+                            mode='lines',
+                            name='Tendencia trucades contestades',
+                            line = dict(
+                                color = ('green'),
+                                dash = 'dot'),)
+        trace_regression_not_answered = go.Scatter(x=df['f_month_order'],
+                            y=predicted_y_not_answered,
+                            mode='lines',
+                            name='Tendencia trucades no contestades',
+                            line = dict(
+                                color = ('red'),
+                                dash = 'dot'),)
+
+        data = [trace_total, trace_regression_total, trace_answered, trace_regression_answered, trace_not_answered, trace_regression_not_answered]
+        layout = go.Layout(
+            title='Evolució del número de trucades per mes',
+            titlefont=dict(family='Arial, sans-serif',
+                           size=24,
+                           color='green'),
+            xaxis=dict(showticklabels=True,
+                       tickangle=60,
+                       tickfont=dict(family='Old Standard TT, serif',
+                                     size=10,
+                                     color='black'),
+                       showexponent='none',
+                       tickmode = 'array',
+                        tickvals = df['f_month_order'],
+                        ticktext = df['f_month']),
+            yaxis=dict(titlefont=dict(family='Arial, sans-serif',
+                                      size=18,
+                                      color='lightgrey'),
+                       showticklabels=True,
+                       tickfont=dict(family='Old Standard TT, serif',
+                                     size=14,
+                                     color='black'),
+                       showexponent='none'))
+        fig = go.Figure(data=data, layout=layout)
+        plot_absolute = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        trace_visits_casual = go.Scatter(x=df['f_month_order'],
+                            y=df['percent_answered'],
+                            mode='lines',
+                            name='Contestades',
+                            stackgroup='one',
+                            groupnorm='percent')
+
+        trace_visits_fidelizied = go.Scatter(x=df['f_month_order'],
+                            y=df['percent_not_answered'],
+                            mode='lines',
+                            name='No contestades',
+                            stackgroup='one')
+        data = [trace_visits_casual, trace_visits_fidelizied]
+        layout = go.Layout(
+            title='Distribució contestades vs no contestades mes a mes',
+            titlefont=dict(family='Arial, sans-serif',
+                           size=24,
+                           color='green'),
+            xaxis=dict(showticklabels=True,
+                       tickangle=60,
+                       tickfont=dict(family='Old Standard TT, serif',
+                                     size=10,
+                                     color='black'),
+                       showexponent='none',
+                       tickmode = 'array',
+                        tickvals = df['f_month_order'],
+                        ticktext = df['f_month']),
+            yaxis=dict(titlefont=dict(family='Arial, sans-serif',
+                                      size=18,
+                                      color='lightgrey'),
+                       showticklabels=True,
+                       tickfont=dict(family='Old Standard TT, serif',
+                                     size=14,
+                                     color='black'),
+                       showexponent='none'))
+        fig = go.Figure(data=data, layout=layout)
+        plot_distrib_percent = py.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+        return plot_absolute, plot_distrib_percent, plot_absolute
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+
+def plots_ext_performance(p_date_ini, p_date_fin):
+    try:
+        connection = connections['datawarehouse']
+        # format date to use in a between condition: YYYYMMDD
+        date_ini = datetime.datetime.strptime(str(p_date_ini), "%d/%m/%Y").strftime("%Y/%m/%d")
+        date_fin = datetime.datetime.strptime(str(p_date_fin), "%d/%m/%Y").strftime("%Y/%m/%d")
+        sql = "SELECT f_extension as extension, sum(f_answered) as answered, sum(f_spoken_time) as spoken_time, sum(f_spoken_time)/sum(f_answered) as time_per_call FROM dm3_callcenter_per_extension WHERE f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_extension IN (100, 101, 102, 104, 111, 112) GROUP BY f_extension"
+        df = pd.read_sql(sql, connection)
+
+        lines = []
+        line = {}
+        calls = 0
+        spoken_time = 0
+        time_per_call = 0
+        total = 0
+        for index, row in df.iterrows():
+            calls += row[1]
+            spoken_time += row[2]
+            time_per_call += row[3]
+            total += 1
+            line = {'extension': row[0], 'answered': f'{row[1]:10.0f}', 'spoken_time': f'{row[2]/3600:10.2f}', 'time_per_call': f'{row[3]/60:10.2f}'}
+            lines.append(line)
+        # add averages
+        if total > 0:
+            line = {'extension': 'promig', 'answered': f'{calls/total:10.0f}', 'spoken_time': f'{spoken_time/(3600*total):10.2f}', 'time_per_call': f'{time_per_call/(60*total):10.2f}'}
+            lines.append(line)
+
+        sql = "SELECT f_extension as extension, f_day, f_hour, sum(f_answered) as answered, sum(f_spoken_time) as spoken_time, sum(f_spoken_time)/sum(f_answered) as time_per_call FROM dm3_callcenter_per_extension WHERE f_day BETWEEN \'"+date_ini+"\' AND \'"+date_fin+"\' and f_extension IN (100, 101, 102, 104, 111, 112) GROUP BY f_extension, f_day, f_hour ORDER BY f_extension, f_day, f_hour"
+        df = pd.read_sql(sql, connection)
+        extensions = sorted(df['extension'].unique())
+        days = sorted(df['f_day'].unique())
+        hours = sorted(df['f_hour'].unique())
+
+        plots = []
+        for extension in extensions:
+            values_day = []
+
+            for hour in hours:
+                line = []
+                for day in days:
+                    v = df.loc[(df['extension'] == extension) & (df['f_day'] == day) & (df['f_hour'] == hour), 'answered'].values
+                    if v.size >0:
+                        line.append(v[0])
+                    else:
+                        line.append(0)
+                values_day.append(line)
+            trace_heatmap_per_extension = go.Heatmap(z=values_day, x=days, y=hours, colorscale='Reds', name=extension)
+            graph_title = 'Trucades ateses per l\'extensió ' + extension
+            layout = go.Layout(
+                title=graph_title,
+                titlefont=dict(family='Arial, sans-serif',
+                               size=24,
+                               color='green'),
+                yaxis=dict(
+                        showticklabels=True,
+                        ticksuffix='h',
+                        tickfont=dict(family='Old Standard TT, serif',
+                                             size=14,
+                                             color='black'),
+                        tickmode='linear',
+                    ),
+                )
+            heatmap_data = [trace_heatmap_per_extension]
+            fig = go.Figure(data=heatmap_data, layout=layout)
+            plots.append(py.offline.plot(fig, include_plotlyjs=False, output_type='div'))
+
+        return lines, plots
     except Error as e:
         print("Error while connecting to MySQL", e)

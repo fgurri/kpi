@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+              <div class="panel-heading">
+                Call center > Evolucio de trucades
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                    {{ plot_absolute|safe}}
+                </div>
+                <div class="row">
+                    {{ plot_distrib_percent|safe}}
+                </div>
+                <div class="row">
+                    {{ plot_answered|safe}}
+                </div>
+            </div>
+            <div class="panel-footer">
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -24,8 +24,6 @@ urlpatterns = [
     path('login', views.login_form, name='login'),
     path('logout', views.logout_form, name='logout'),
     path('ccpf', views.cc_period_performance, name='ccpf'),
+    path('ccevo', views.cc_evolution, name='ccevo'),
+    path('ccrpe', views.cc_ext_performance, name='ccrpe'),
 ]
-
-#urlpatterns += [
-#   path(r'^static/(?P<path>.*)$', django.views.static.serve, {'document_root': s.STATIC_ROOT, 'show_indexes': s.DEBUG})
-#]

@@ -690,8 +690,8 @@ order by codi asc
       </output>
     </remotesteps>
     <GUI>
-      <xloc>96</xloc>
-      <yloc>224</yloc>
+      <xloc>608</xloc>
+      <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -744,7 +744,7 @@ GROUP BY
     </remotesteps>
     <GUI>
       <xloc>96</xloc>
-      <yloc>96</yloc>
+      <yloc>32</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -844,7 +844,7 @@ GROUP BY
       </field>
       <field>
         <column_name>f_week_day</column_name>
-        <stream_name>wd</stream_name>
+        <stream_name>wd_name</stream_name>
       </field>
       <field>
         <column_name>f_hour</column_name>
@@ -873,6 +873,10 @@ GROUP BY
       <field>
         <column_name>f_dst_id</column_name>
         <stream_name>codi</stream_name>
+      </field>
+      <field>
+        <column_name>f_week_day_order</column_name>
+        <stream_name>wd</stream_name>
       </field>
     </fields>
     <cluster_schema />
@@ -1374,7 +1378,7 @@ GROUP BY
     </partitioning>
     <fields>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>0</replace_string>
@@ -1385,7 +1389,7 @@ GROUP BY
         <case_sensitive>no</case_sensitive>
       </field>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>1</replace_string>
@@ -1396,7 +1400,7 @@ GROUP BY
         <case_sensitive>no</case_sensitive>
       </field>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>2</replace_string>
@@ -1407,7 +1411,7 @@ GROUP BY
         <case_sensitive>no</case_sensitive>
       </field>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>3</replace_string>
@@ -1418,7 +1422,7 @@ GROUP BY
         <case_sensitive>no</case_sensitive>
       </field>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>4</replace_string>
@@ -1429,7 +1433,7 @@ GROUP BY
         <case_sensitive>no</case_sensitive>
       </field>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>5</replace_string>
@@ -1440,7 +1444,7 @@ GROUP BY
         <case_sensitive>no</case_sensitive>
       </field>
       <field>
-        <in_stream_name>wd</in_stream_name>
+        <in_stream_name>wd_name</in_stream_name>
         <out_stream_name />
         <use_regex>no</use_regex>
         <replace_string>6</replace_string>
@@ -1579,27 +1583,54 @@ GROUP BY
       <schema_name />
     </partitioning>
     <fields>
+      <field>
+        <name>YYYY</name>
+        <rename />
+      </field>
+      <field>
+        <name>m</name>
+        <rename />
+      </field>
+      <field>
+        <name>yyyymm</name>
+        <rename />
+      </field>
+      <field>
+        <name>YYYYMMDD</name>
+        <rename />
+      </field>
+      <field>
+        <name>wd</name>
+        <rename />
+      </field>
+      <field>
+        <name>hh</name>
+        <rename />
+      </field>
+      <field>
+        <name>destination</name>
+        <rename />
+      </field>
+      <field>
+        <name>total</name>
+        <rename />
+      </field>
+      <field>
+        <name>answered</name>
+        <rename />
+      </field>
+      <field>
+        <name>not_answered</name>
+        <rename />
+      </field>
+      <field>
+        <name>wd</name>
+        <rename>wd_name</rename>
+      </field>
       <select_unspecified>N</select_unspecified>
       <meta>
         <name>m</name>
         <rename>m</rename>
-        <type>String</type>
-        <length>-2</length>
-        <precision>-2</precision>
-        <conversion_mask />
-        <date_format_lenient>false</date_format_lenient>
-        <date_format_locale />
-        <date_format_timezone />
-        <lenient_string_to_number>false</lenient_string_to_number>
-        <encoding />
-        <decimal_symbol />
-        <grouping_symbol />
-        <currency_symbol />
-        <storage_type />
-      </meta>
-      <meta>
-        <name>wd</name>
-        <rename>wd</rename>
         <type>String</type>
         <length>-2</length>
         <precision>-2</precision>
@@ -1723,6 +1754,40 @@ GROUP BY
         <length>-2</length>
         <precision>-2</precision>
         <conversion_mask>#</conversion_mask>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale />
+        <date_format_timezone />
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding />
+        <decimal_symbol />
+        <grouping_symbol />
+        <currency_symbol />
+        <storage_type />
+      </meta>
+      <meta>
+        <name>wd</name>
+        <rename>wd</rename>
+        <type>String</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask />
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale />
+        <date_format_timezone />
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding />
+        <decimal_symbol />
+        <grouping_symbol />
+        <currency_symbol />
+        <storage_type />
+      </meta>
+      <meta>
+        <name>wd_name</name>
+        <rename>wd_name</rename>
+        <type>String</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask />
         <date_format_lenient>false</date_format_lenient>
         <date_format_locale />
         <date_format_timezone />

@@ -293,9 +293,53 @@ def cc_period_performance(request):
         date_ini = today
         date_fin = today
 
-    plot_distrib, plot_abs_values =  p.plots_callcenter_period(date_ini, date_fin)
+    plot_distrib, plot_abs_values, plot_heatmap_no_answer, plot_heatmap_total, plot_heatmap_per_day_no_answer, plot_heatmap_per_day_total = p.plots_callcenter_period(date_ini, date_fin)
     return render(request, 'callcenter_period_performance.html',{'plot_distrib': plot_distrib,
                                                             'plot_abs_values': plot_abs_values,
+                                                            'plot_heatmap_no_answer': plot_heatmap_no_answer,
+                                                            'plot_heatmap_total': plot_heatmap_total,
+                                                            'plot_heatmap_per_day_no_answer': plot_heatmap_per_day_no_answer,
+                                                            'plot_heatmap_per_day_total': plot_heatmap_per_day_total,
+                                                            'date_ini': date_ini,
+                                                            'date_fin': date_fin,
+                                                            'today': today,
+                                                            'yesterday': yesterday,
+                                                            'start_previous_month': start_previous_month,
+                                                            'end_previous_month': end_previous_month,
+                                                            'start_previous_week': start_previous_week,
+                                                            'end_previous_week': end_previous_week})
+
+@login_required
+def cc_evolution(request):
+    plot_absolute, plot_distrib_percent, plot_answered = p.plots_callcenter_evo()
+    return render(request, 'callcenter_evolution.html', {'plot_absolute': plot_absolute,
+                                                        'plot_distrib_percent': plot_distrib_percent,
+                                                        'plot_answered': plot_answered,
+                                                        })
+
+@login_required
+def cc_ext_performance(request):
+    date_ini = request.POST.get('date_ini')
+    date_fin = request.POST.get('date_fin')
+    today = datetime.date.today()
+    previous_month = today - relativedelta(months=1)
+    start_previous_month = date(previous_month.year, previous_month.month, 1).strftime("%d/%m/%Y")
+    end_previous_month = date(today.year, today.month, 1) - relativedelta(days=1)
+    end_previous_month = end_previous_month.strftime("%d/%m/%Y")
+    start_previous_week = today + datetime.timedelta(-today.weekday(), weeks=-1)
+    start_previous_week = start_previous_week.strftime("%d/%m/%Y")
+    end_previous_week = today + datetime.timedelta(-today.weekday() - 1)
+    end_previous_week = end_previous_week.strftime("%d/%m/%Y")
+    yesterday = today -relativedelta(days=1)
+    today = today.strftime("%d/%m/%Y")
+    yesterday = yesterday.strftime("%d/%m/%Y")
+
+    if not date_ini or not date_fin:
+        date_ini = today
+        date_fin = today
+    table_data, plots = p.plots_ext_performance(date_ini, date_fin)
+    return render(request, 'callcenter_ext_performance.html', {'table_data': table_data,
+                                                            'plots': plots,
                                                             'date_ini': date_ini,
                                                             'date_fin': date_fin,
                                                             'today': today,

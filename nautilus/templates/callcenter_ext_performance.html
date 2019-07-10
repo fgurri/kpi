@@ -29,12 +29,12 @@
         <div class="col-md-12">
             <div class="panel panel-info">
               <div class="panel-heading">
-                Call center > Analisi de periode
+                Call center > Rentiment per extensió
               </div>
               <div class="panel-body">
                 <div class="row">
                     <div class="col-md-10">
-                    <form action="ccpf" method="POST" id="form_range">{% csrf_token %}
+                    <form action="ccrpe" method="POST" id="form_range">{% csrf_token %}
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label class="control-label">Data inici:</label>
@@ -76,23 +76,39 @@
                     <h2>Anàlisi entre el {{date_ini}} i el {{date_fin}}</h2>
                 </div>
                 <div class="row">
-                    {{ plot_heatmap_per_day_total|safe}}
+                    <div class="col-md-12">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                Dades per extensió
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-striped table-hover table-dataTable">
+                                    <thead>
+                                        <th class="text-center">Extensió</th>
+                                        <th class="text-center">Contestades</th>
+                                        <th class="text-center">Temps al telefon</th>
+                                        <th class="text-center">Temps per trucada</th>
+                                    </thead>
+                                <tbody>
+                                    {% for extension in table_data %}
+                                        <tr>
+                                            <td class="text-center">{{extension.extension}}</td>
+                                            <td class="text-center">{{extension.answered}}</td>
+                                            <td class="text-center">{{extension.spoken_time}} h</td>
+                                            <td class="text-center">{{extension.time_per_call}} m</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row">
-                    {{ plot_heatmap_per_day_no_answer|safe}}
-                </div>
-                <div class="row">
-                    {{ plot_heatmap_total|safe}}
-                </div>
-                <div class="row">
-                    {{ plot_heatmap_no_answer|safe}}
-                </div>
-                <div class="row">
-                    {{ plot_distrib|safe }}
-                </div>
-                <div class="row">
-                    {{ plot_abs_values|safe}}
-                </div>
+                {% for plot in plots %}
+                    <div class="row">
+                        {{ plot|safe}}
+                    </div>
+                {% endfor %}
             </div>
             <div class="panel-footer">
             </div>
