@@ -290,8 +290,8 @@ def cc_period_performance(request):
     yesterday = yesterday.strftime("%d/%m/%Y")
 
     if not date_ini or not date_fin:
-        date_ini = today
-        date_fin = today
+        date_ini = yesterday
+        date_fin = yesterday
 
     plot_distrib, plot_abs_values, plot_heatmap_no_answer, plot_heatmap_total, plot_heatmap_per_day_no_answer, plot_heatmap_per_day_total = p.plots_callcenter_period(date_ini, date_fin)
     return render(request, 'callcenter_period_performance.html',{'plot_distrib': plot_distrib,
@@ -335,8 +335,8 @@ def cc_ext_performance(request):
     yesterday = yesterday.strftime("%d/%m/%Y")
 
     if not date_ini or not date_fin:
-        date_ini = today
-        date_fin = today
+        date_ini = yesterday
+        date_fin = yesterday
     table_data, plots = p.plots_ext_performance(date_ini, date_fin)
     return render(request, 'callcenter_ext_performance.html', {'table_data': table_data,
                                                             'plots': plots,
